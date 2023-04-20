@@ -1,0 +1,140 @@
+package javadesimulator2.GUI;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import imgui.ImGui;
+import imgui.ImVec2;
+import imgui.extension.imnodes.ImNodes;
+import imgui.extension.imnodes.ImNodesContext;
+import imgui.extension.imnodes.flag.ImNodesMiniMapLocation;
+import imgui.extension.imnodes.flag.ImNodesPinShape;
+import imgui.type.ImInt;
+
+import com.google.common.graph.EndpointPair;
+import com.google.common.graph.MutableValueGraph;
+import com.google.common.graph.ValueGraphBuilder;
+
+public class NodeEditor {
+    final ImNodesContext context = new ImNodesContext();
+
+    private static int nextID = 0;
+
+    private HashMap<Integer, Node> nodes = new HashMap<>();
+    private HashMap<Integer, NodeAttribute> nodeAttributes = new HashMap<>();
+    MutableValueGraph<Integer, Integer> graph = ValueGraphBuilder.directed()
+            .allowsSelfLoops(false)
+            .build();
+
+    public NodeEditor() {
+        ImNodes.createContext();
+    }
+
+    ImVec2 lastHeldMousePosition;
+
+    private void handlePanning() {
+        if (ImNodes.isEditorHovered()) {
+            if (ImGui.isMouseClicked(0)) {
+                lastHeldMousePosition = ImGui.getMousePos();
+            } else if (ImGui.isMouseDown(0) && ImGui.getIO().getKeyShift()) {
+                ImVec2 currentEditorPosition = new ImVec2();
+                ImNodes.editorContextGetPanning(currentEditorPosition);
+
+                ImVec2 delta = ImGui.getMousePos();
+                delta.x -= lastHeldMousePosition.x;
+                delta.y -= lastHeldMousePosition.y;
+
+                ImNodes.editorResetPanning(delta.x + currentEditorPosition.x, delta.y + currentEditorPosition.y);
+                lastHeldMousePosition = ImGui.getMousePos();
+            }
+        }
+    }
+
+    public void show(boolean shouldShow) {
+        if (!shouldShow) {
+            return;
+        }
+
+        ImGui.begin("Node Editor");
+        ImNodes.editorContextSet(context);
+        ImNodes.beginNodeEditor();
+
+        ImNodes.miniMap(0.2f, ImNodesMiniMapLocation.TopRight);
+        handlePanning();
+
+        if (ImGui.getIO().getKeysDown((int) 'A')) {
+            ArrayList<NodeAttribute> attributes = new ArrayList<>();
+            attributes.add(new NodeAttribute(NodeAttribute.IO.I, "Input", nextID++));
+            attributes.add(new NodeAttribute(NodeAttribute.IO.O, "Output", nextID++));
+
+            Node node = new Node(nextID++, "A node", attributes);
+
+            nodes.put(node.getID(), node);
+
+            for (NodeAttribute a : attributes) {
+                graph.addNode(a.getID());
+                a.setParent(node);
+
+                nodeAttributes.put(a.getID(), a);
+            }
+        }
+
+        for (EndpointPair<Integer> edge : graph.edges()) {
+            java.util.Optional<Integer> edgeValue = graph.edgeValue(edge);
+            if (edgeValue.isPresent()) {
+                ImNodes.link(edgeValue.get(), edge.nodeU(), edge.nodeV());
+            }
+        }
+
+        for (Node node : nodes.values()) {
+            ImNodes.beginNode(node.getID());
+
+            ImNodes.beginNodeTitleBar();
+            ImGui.text(node.getName());
+            ImNodes.endNodeTitleBar();
+
+            for (NodeAttribute a : node.getAttributes()) {
+                if (a.getIOType() == NodeAttribute.IO.I) {
+                    ImNodes.beginInputAttribute(a.getID(), ImNodesPinShape.CircleFilled);
+                    ImGui.text(a.getTitle());
+                    ImNodes.endInputAttribute();
+                } else {
+                    ImNodes.beginOutputAttribute(a.getID());
+                    ImGui.text(a.getTitle());
+                    ImNodes.endOutputAttribute();
+                }
+            }
+
+            ImNodes.endNode();
+        }
+
+        ImNodes.endNodeEditor();
+
+        {
+            ImInt start = new ImInt();
+            ImInt end = new ImInt();
+
+            if (ImNodes.isLinkCreated(start, end)) {
+                NodeAttribute a = nodeAttributes.get(start.get());
+                NodeAttribute b = nodeAttributes.get(end.get());
+
+                if (a != null && b != null) {
+                    int inputNode = -1, outputNode = -1;
+
+                    if (a.getIOType() != b.getIOType()) {
+                        inputNode = a.getIOType() == NodeAttribute.IO.I ? a.getID() : b.getID();
+                        outputNode = inputNode == a.getID() ? b.getID() : a.getID();
+                    }
+
+                    System.out.printf("putEdgeValue(%d, %d, %d);\n", inputNode, outputNode, nextID);
+                    graph.putEdgeValue(inputNode, outputNode, nextID++);
+                } else {
+                    System.out.println("Could not find attributes in HashMap");
+                }
+
+            }
+        }
+
+        ImGui.end();
+    }
+}
