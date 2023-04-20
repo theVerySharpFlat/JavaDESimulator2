@@ -9,6 +9,7 @@ import imgui.extension.imnodes.ImNodes;
 import imgui.extension.imnodes.ImNodesContext;
 import imgui.extension.imnodes.flag.ImNodesMiniMapLocation;
 import imgui.extension.imnodes.flag.ImNodesPinShape;
+import imgui.flag.ImGuiFocusedFlags;
 import imgui.type.ImInt;
 
 import com.google.common.graph.EndpointPair;
@@ -50,7 +51,11 @@ public class NodeEditor {
         }
     }
 
+    public static final int KEY_BACKSPACE = 259;
+    public static final int KEY_DELETE = 261;
+
     public void show(boolean shouldShow) {
+        ImGui.showDemoWindow();
         if (!shouldShow) {
             return;
         }
@@ -126,13 +131,49 @@ public class NodeEditor {
                         outputNode = inputNode == a.getID() ? b.getID() : a.getID();
                     }
 
-                    System.out.printf("putEdgeValue(%d, %d, %d);\n", inputNode, outputNode, nextID);
                     graph.putEdgeValue(inputNode, outputNode, nextID++);
                 } else {
                     System.out.println("Could not find attributes in HashMap");
                 }
 
             }
+
+        }
+
+        {
+            if (ImGui.isWindowFocused(ImGuiFocusedFlags.RootAndChildWindows)
+                    && (ImGui.getIO().getKeysDown(KEY_DELETE) || ImGui.getIO().getKeysDown(KEY_BACKSPACE))) {
+                int[] linkIds = new int[1024];
+                ImNodes.getSelectedLinks(linkIds);
+
+                for (Integer link : linkIds) {
+                    for (EndpointPair<Integer> edge : graph.edges()) {
+                        java.util.Optional<Integer> val = graph.edgeValue(edge);
+                        if (val.isPresent() && val.get() == link) {
+                            graph.removeEdge(edge);
+                            break;
+                        }
+                    }
+                }
+
+                int[] nodeIds = new int[1024];
+                ImNodes.getSelectedNodes(nodeIds);
+
+                for(Integer nodeID : nodeIds) {
+                    graph.removeNode(nodeID);
+
+                    Node node = nodes.get(nodeID);
+
+                    if(node != null) {
+                        for(NodeAttribute a : node.getAttributes()) {
+                            nodeAttributes.remove(a.getID());
+                        }
+
+                        nodes.remove(node.getID());
+                    }
+                }
+            }
+
         }
 
         ImGui.end();
