@@ -11,6 +11,7 @@ import imgui.extension.imnodes.flag.ImNodesMiniMapLocation;
 import imgui.extension.imnodes.flag.ImNodesPinShape;
 import imgui.flag.ImGuiFocusedFlags;
 import imgui.type.ImInt;
+import javadesimulator2.GUI.Components.AndComponent;
 
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
@@ -29,6 +30,14 @@ public class NodeEditor {
 
     public NodeEditor() {
         ImNodes.createContext();
+    }
+
+    public static int getNextID() {
+        return nextID++;
+    }
+
+    public static int getCurrentNextID() {
+        return nextID;
     }
 
     ImVec2 lastHeldMousePosition;
@@ -68,15 +77,18 @@ public class NodeEditor {
         handlePanning();
 
         if (ImGui.getIO().getKeysDown((int) 'A')) {
-            ArrayList<NodeAttribute> attributes = new ArrayList<>();
-            attributes.add(new NodeAttribute(NodeAttribute.IO.I, "Input", nextID++));
-            attributes.add(new NodeAttribute(NodeAttribute.IO.O, "Output", nextID++));
+            /*
+             * ArrayList<NodeAttribute> attributes = new ArrayList<>();
+             * attributes.add(new NodeAttribute(NodeAttribute.IO.I, "Input", nextID++));
+             * attributes.add(new NodeAttribute(NodeAttribute.IO.O, "Output", nextID++));
+             */
 
-            Node node = new Node(nextID++, "A node", attributes);
+            // Node node = new Node(nextID++, "A node", attributes);
 
+            Node node = new AndComponent();
             nodes.put(node.getID(), node);
 
-            for (NodeAttribute a : attributes) {
+            for (NodeAttribute a : node.getAttributes()) {
                 graph.addNode(a.getID());
                 a.setParent(node);
 
@@ -93,6 +105,7 @@ public class NodeEditor {
 
         for (Node node : nodes.values()) {
             ImNodes.beginNode(node.getID());
+            ImNodes.getStyle().setNodeCornerRounding(0.0f);
 
             ImNodes.beginNodeTitleBar();
             ImGui.text(node.getName());
@@ -105,6 +118,9 @@ public class NodeEditor {
                     ImNodes.endInputAttribute();
                 } else {
                     ImNodes.beginOutputAttribute(a.getID());
+                    ImGui.setCursorPosX(ImNodes.getNodeScreenSpacePosX(node.getID()) - ImGui.getWindowPos().x
+                            + ImNodes.getNodeDimensionsX(node.getID())
+                            - ImGui.calcTextSize(a.getTitle()).x - 10.0f);
                     ImGui.text(a.getTitle());
                     ImNodes.endOutputAttribute();
                 }
@@ -159,13 +175,13 @@ public class NodeEditor {
                 int[] nodeIds = new int[1024];
                 ImNodes.getSelectedNodes(nodeIds);
 
-                for(Integer nodeID : nodeIds) {
+                for (Integer nodeID : nodeIds) {
                     graph.removeNode(nodeID);
 
                     Node node = nodes.get(nodeID);
 
-                    if(node != null) {
-                        for(NodeAttribute a : node.getAttributes()) {
+                    if (node != null) {
+                        for (NodeAttribute a : node.getAttributes()) {
                             nodeAttributes.remove(a.getID());
                         }
 

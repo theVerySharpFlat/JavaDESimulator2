@@ -1,7 +1,7 @@
 package javadesimulator2.GUI;
 
 public class NodeAttribute {
-    enum IO {
+    public enum IO {
         I,
         O
     }
