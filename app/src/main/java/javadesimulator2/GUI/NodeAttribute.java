@@ -13,12 +13,15 @@ public class NodeAttribute {
         this.id = id;
     }
 
-    public NodeAttribute(IO ioType, String title, int id, Runnable extraShow) {
+    public NodeAttribute(IO ioType, String title, int id, Runnable before, Runnable after) {
         this(ioType, title, id);
-        this.extraRender = extraShow;
+        this.before = before;
+        this.after = after;
     }
 
-    public Runnable getExtraRenderFN() { return extraRender; }
+    public Runnable getBeforeRenderFN() { return before; }
+    public Runnable getAfterRenderFN() { return after; }
+    
 
     public IO getIOType() {
         return ioType;
@@ -40,6 +43,9 @@ public class NodeAttribute {
         }
     }
 
+    public boolean getState() { return state; }
+    public void setState(boolean val) { state = val; }
+
 
     private IO ioType;
     private String title;
@@ -47,5 +53,8 @@ public class NodeAttribute {
 
     private Node parent = null;
 
-    Runnable extraRender = null;
+    Runnable before = null;
+    Runnable after = null;
+
+    boolean state = false;
 }

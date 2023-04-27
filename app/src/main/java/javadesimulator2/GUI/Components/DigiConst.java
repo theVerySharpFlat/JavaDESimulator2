@@ -14,17 +14,23 @@ public class DigiConst extends Node {
         super(NodeEditor.getCurrentNextID(), "DIGICONST-" + NodeEditor.getNextID(), new ArrayList<NodeAttribute>());
 
         int idY = NodeEditor.getNextID();
-        super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, () -> outputShowMod()));
+        super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, () -> outputShowMod(), () -> {
+        }));
     }
 
+    ImBoolean boxState = new ImBoolean(false);
 
-    ImBoolean state = new ImBoolean(false);
     public void outputShowMod() {
-        ImGui.checkbox("##Checkbox", state);
+        ImGui.checkbox("##Checkbox", boxState);
 
         ImGui.sameLine();
-        ImGui.text(state.get() ? "ON" : "OFF");
+        ImGui.text(boxState.get() ? "ON" : "OFF");
 
         ImGui.sameLine();
+    }
+
+    @Override
+    public void update() {
+        super.getAttributes().get(0).setState(boxState.get());
     }
 }

@@ -18,5 +18,16 @@ public class And extends Node {
 
         int idY = NodeEditor.getNextID();
         super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY));
+
+        a = super.getAttributes().get(0);
+        b = super.getAttributes().get(1);
+        y = super.getAttributes().get(2);
     }
+
+    @Override
+    public void update() {
+        y.setState(a.getState() & b.getState());
+    }
+
+    NodeAttribute a, b, y;
 }

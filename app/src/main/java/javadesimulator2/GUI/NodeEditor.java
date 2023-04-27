@@ -94,6 +94,8 @@ public class NodeEditor {
 
     private static final Set<Constructor<? extends Node>> nodeCtors = loadComponentConstructors();
 
+    private boolean simulating = false;
+
     public void showSidebar(boolean shouldShow) {
         if (!shouldShow)
             return;
@@ -118,13 +120,56 @@ public class NodeEditor {
         ImGui.end();
     }
 
+    private void simulate() {
+        for (EndpointPair<Integer> edge : graph.edges()) {
+            int src = edge.nodeU();
+            int dst = edge.nodeV();
+
+            NodeAttribute srcAttribute = nodeAttributes.get(src);
+            NodeAttribute dstAttribute = nodeAttributes.get(dst);
+
+            srcAttribute.setState(dstAttribute.getState());
+        }
+
+        for (Node node : nodes.values()) {
+            node.update();
+        }
+    }
+
     public void show(boolean shouldShow) {
+        ImGui.begin("Nodes");
+        for (Node node : nodes.values()) {
+            ImGui.text("Node " + node.getID());
+        }
+
+        ImGui.end();
+
+        ImGui.begin("attributes");
+        for (NodeAttribute a : nodeAttributes.values()) {
+            ImGui.text("Node " + a.getID());
+        }
+        ImGui.end();
+
+        ImGui.begin("edges");
+        for (EndpointPair<Integer> edge : graph.edges()) {
+            ImGui.text("Edge value: " + graph.edgeValue(edge.nodeU(), edge.nodeV()).get());
+        }
+        ImGui.end();
+
+        if (simulating) {
+            simulate();
+        }
+
         ImGui.showDemoWindow();
         if (!shouldShow) {
             return;
         }
 
         ImGui.begin("Node Editor");
+        ImGui.setCursorPosX(ImGui.getWindowSizeX() / 2.0f - ImGui.calcTextSize("play").x);
+        if (ImGui.button(simulating ? "stop" : "play")) {
+            simulating = !simulating;
+        }
         ImNodes.editorContextSet(context);
         ImNodes.beginNodeEditor();
 
@@ -202,33 +247,38 @@ public class NodeEditor {
         {
             if (ImGui.isWindowFocused(ImGuiFocusedFlags.RootAndChildWindows)
                     && (ImGui.getIO().getKeysDown(KEY_DELETE) || ImGui.getIO().getKeysDown(KEY_BACKSPACE))) {
-                int[] linkIds = new int[1024];
-                ImNodes.getSelectedLinks(linkIds);
+                if (ImNodes.numSelectedLinks() > 0) {
+                    int[] linkIds = new int[ImNodes.numSelectedLinks()];
+                    ImNodes.getSelectedLinks(linkIds);
 
-                for (Integer link : linkIds) {
-                    for (EndpointPair<Integer> edge : graph.edges()) {
-                        java.util.Optional<Integer> val = graph.edgeValue(edge);
-                        if (val.isPresent() && val.get() == link) {
-                            graph.removeEdge(edge);
-                            break;
+                    for (Integer link : linkIds) {
+                        for (EndpointPair<Integer> edge : graph.edges()) {
+                            java.util.Optional<Integer> val = graph.edgeValue(edge);
+                            if (val.isPresent() && val.get() == link) {
+                                graph.removeEdge(edge);
+                                break;
+                            }
                         }
                     }
                 }
 
-                int[] nodeIds = new int[1024];
-                ImNodes.getSelectedNodes(nodeIds);
+                if (ImNodes.numSelectedNodes() > 0) {
+                    int[] nodeIds = new int[ImNodes.numSelectedNodes()];
+                    ImNodes.getSelectedNodes(nodeIds);
 
-                for (Integer nodeID : nodeIds) {
-                    graph.removeNode(nodeID);
+                    for (Integer nodeID : nodeIds) {
 
-                    Node node = nodes.get(nodeID);
+                        Node node = nodes.get(nodeID);
 
-                    if (node != null) {
-                        for (NodeAttribute a : node.getAttributes()) {
-                            nodeAttributes.remove(a.getID());
+                        if (node != null) {
+
+                            for (NodeAttribute a : node.getAttributes()) {
+                                nodeAttributes.remove(a.getID());
+                                graph.removeNode(a.getID());
+                            }
+
+                            nodes.remove(node.getID());
                         }
-
-                        nodes.remove(node.getID());
                     }
                 }
             }

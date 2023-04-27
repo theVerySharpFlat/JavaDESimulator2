@@ -6,7 +6,7 @@ import imgui.ImGui;
 import imgui.extension.imnodes.ImNodes;
 import imgui.extension.imnodes.flag.ImNodesPinShape;
 
-public class Node {
+public abstract class Node {
     public Node(int id, String name, ArrayList<NodeAttribute> attributes) {
         this.attributes = attributes;
         this.id = id;
@@ -37,15 +37,25 @@ public class Node {
             if (a.getIOType() == NodeAttribute.IO.I) {
                 ImNodes.beginInputAttribute(a.getID(), ImNodesPinShape.CircleFilled);
                 ImGui.text(a.getTitle());
-                if(a.getExtraRenderFN() != null) {
-                    a.getExtraRenderFN().run();
+                if (a.getBeforeRenderFN() != null) {
+                    a.getBeforeRenderFN().run();
                 }
+
                 ImNodes.endInputAttribute();
+
+                if (a.getAfterRenderFN() != null) {
+                    a.getAfterRenderFN().run();
+                }
+
             } else {
+                if (a.getBeforeRenderFN() != null) {
+                    a.getBeforeRenderFN().run();
+                }
+
                 ImNodes.beginOutputAttribute(a.getID());
-                if(a.getExtraRenderFN() != null) {
-                    System.out.println("right here");
-                    a.getExtraRenderFN().run();
+
+                if (a.getAfterRenderFN() != null) {
+                    a.getAfterRenderFN().run();
                 }
                 ImGui.setCursorPosX(ImNodes.getNodeScreenSpacePosX(getID()) - ImGui.getWindowPos().x
                         + ImNodes.getNodeDimensionsX(getID())
@@ -57,6 +67,8 @@ public class Node {
 
         ImNodes.endNode();
     }
+
+    public abstract void update();
 
     private ArrayList<NodeAttribute> attributes;
     private int id;
