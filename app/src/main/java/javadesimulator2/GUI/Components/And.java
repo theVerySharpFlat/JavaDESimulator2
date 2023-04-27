@@ -6,8 +6,8 @@ import javadesimulator2.GUI.Node;
 import javadesimulator2.GUI.NodeAttribute;
 import javadesimulator2.GUI.NodeEditor;
 
-public class AndComponent extends Node {
-    public AndComponent() {
+public class And extends Node {
+    public And() {
         super(NodeEditor.getCurrentNextID(), "AND-" + NodeEditor.getNextID(), new ArrayList<NodeAttribute>());
 
         int idA = NodeEditor.getNextID();

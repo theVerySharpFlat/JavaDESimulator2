@@ -1,21 +1,25 @@
 package javadesimulator2.GUI;
 
-import java.util.ArrayList;
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.reflections.Reflections;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
+
+import com.google.common.graph.EndpointPair;
+import com.google.common.graph.MutableValueGraph;
+import com.google.common.graph.ValueGraphBuilder;
 
 import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.extension.imnodes.ImNodes;
 import imgui.extension.imnodes.ImNodesContext;
 import imgui.extension.imnodes.flag.ImNodesMiniMapLocation;
-import imgui.extension.imnodes.flag.ImNodesPinShape;
 import imgui.flag.ImGuiFocusedFlags;
 import imgui.type.ImInt;
-import javadesimulator2.GUI.Components.AndComponent;
-
-import com.google.common.graph.EndpointPair;
-import com.google.common.graph.MutableValueGraph;
-import com.google.common.graph.ValueGraphBuilder;
 
 public class NodeEditor {
     final ImNodesContext context = new ImNodesContext();
@@ -63,6 +67,57 @@ public class NodeEditor {
     public static final int KEY_BACKSPACE = 259;
     public static final int KEY_DELETE = 261;
 
+    public String currentDraggedElement = "";
+
+    private static Set<Constructor<? extends Node>> loadComponentConstructors() {
+        final String packageName = "javadesimulator2.GUI.Components";
+
+        Reflections reflections = new Reflections(
+                new ConfigurationBuilder()
+                        .forPackage(packageName)
+                        .filterInputsBy(new FilterBuilder().includePackage(packageName)));
+
+        Set<Class<? extends Node>> classes = reflections.getSubTypesOf(Node.class);
+
+        HashSet<Constructor<? extends Node>> constructors = new HashSet<>(classes.size());
+
+        for (Class<? extends Node> c : classes) {
+            try {
+                constructors.add(c.getConstructor());
+            } catch (NoSuchMethodException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+        return constructors;
+    }
+
+    private static final Set<Constructor<? extends Node>> nodeCtors = loadComponentConstructors();
+
+    public void showSidebar(boolean shouldShow) {
+        if (!shouldShow)
+            return;
+
+        ImGui.begin("Sidebar");
+
+        float width = ImGui.getWindowWidth();
+
+        for (Constructor<? extends Node> ctor : nodeCtors) {
+            String name = ctor.getDeclaringClass().getSimpleName().toUpperCase();
+            ImGui.pushID(name + "-BTN");
+            ImGui.button(name, width - 10.0f, 50.0f);
+            if (ImGui.beginDragDropSource()) {
+                ImGui.setDragDropPayload("NEW-COMPONENT", ctor);
+                ImGui.button(name, width, 50.0f);
+                ImGui.endDragDropSource();
+
+            }
+            ImGui.popID();
+        }
+
+        ImGui.end();
+    }
+
     public void show(boolean shouldShow) {
         ImGui.showDemoWindow();
         if (!shouldShow) {
@@ -76,26 +131,6 @@ public class NodeEditor {
         ImNodes.miniMap(0.2f, ImNodesMiniMapLocation.TopRight);
         handlePanning();
 
-        if (ImGui.getIO().getKeysDown((int) 'A')) {
-            /*
-             * ArrayList<NodeAttribute> attributes = new ArrayList<>();
-             * attributes.add(new NodeAttribute(NodeAttribute.IO.I, "Input", nextID++));
-             * attributes.add(new NodeAttribute(NodeAttribute.IO.O, "Output", nextID++));
-             */
-
-            // Node node = new Node(nextID++, "A node", attributes);
-
-            Node node = new AndComponent();
-            nodes.put(node.getID(), node);
-
-            for (NodeAttribute a : node.getAttributes()) {
-                graph.addNode(a.getID());
-                a.setParent(node);
-
-                nodeAttributes.put(a.getID(), a);
-            }
-        }
-
         for (EndpointPair<Integer> edge : graph.edges()) {
             java.util.Optional<Integer> edgeValue = graph.edgeValue(edge);
             if (edgeValue.isPresent()) {
@@ -104,32 +139,40 @@ public class NodeEditor {
         }
 
         for (Node node : nodes.values()) {
-            ImNodes.beginNode(node.getID());
-            ImNodes.getStyle().setNodeCornerRounding(0.0f);
-
-            ImNodes.beginNodeTitleBar();
-            ImGui.text(node.getName());
-            ImNodes.endNodeTitleBar();
-
-            for (NodeAttribute a : node.getAttributes()) {
-                if (a.getIOType() == NodeAttribute.IO.I) {
-                    ImNodes.beginInputAttribute(a.getID(), ImNodesPinShape.CircleFilled);
-                    ImGui.text(a.getTitle());
-                    ImNodes.endInputAttribute();
-                } else {
-                    ImNodes.beginOutputAttribute(a.getID());
-                    ImGui.setCursorPosX(ImNodes.getNodeScreenSpacePosX(node.getID()) - ImGui.getWindowPos().x
-                            + ImNodes.getNodeDimensionsX(node.getID())
-                            - ImGui.calcTextSize(a.getTitle()).x - 10.0f);
-                    ImGui.text(a.getTitle());
-                    ImNodes.endOutputAttribute();
-                }
-            }
-
-            ImNodes.endNode();
+            node.show();
         }
 
         ImNodes.endNodeEditor();
+
+        if (ImGui.beginDragDropTarget()) {
+            Object raw = ImGui.acceptDragDropPayload("NEW-COMPONENT");
+            if (raw != null) {
+                Constructor<? extends Node> ctor = (Constructor<? extends Node>) (raw); // Trust me bro
+                Node node = null;
+                try {
+                    node = ctor.newInstance();
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+
+                if (node == null) {
+                    System.out.println("Failed to create node!");
+                    return;
+                }
+
+                ImNodes.setNodeScreenSpacePos(node.getID(), ImGui.getMousePosX(), ImGui.getMousePosY());
+
+                nodes.put(node.getID(), node);
+
+                for (NodeAttribute a : node.getAttributes()) {
+                    graph.addNode(a.getID());
+                    a.setParent(node);
+
+                    nodeAttributes.put(a.getID(), a);
+                }
+            }
+            ImGui.endDragDropTarget();
+        }
 
         {
             ImInt start = new ImInt();

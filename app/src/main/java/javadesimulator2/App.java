@@ -33,10 +33,8 @@ public class App extends Application {
     @Override
     public void process() {
         ImGui.dockSpaceOverViewport();
-
-        ImGui.begin("Sidebar");
-        ImGui.text("This is a sidebar");
-        ImGui.end();
+        
+        nodeEditor.showSidebar(true);
 
         nodeEditor.show(true);
     }

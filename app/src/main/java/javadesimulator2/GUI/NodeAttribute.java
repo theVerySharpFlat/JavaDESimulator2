@@ -1,5 +1,6 @@
 package javadesimulator2.GUI;
 
+
 public class NodeAttribute {
     public enum IO {
         I,
@@ -11,6 +12,13 @@ public class NodeAttribute {
         this.title = title;
         this.id = id;
     }
+
+    public NodeAttribute(IO ioType, String title, int id, Runnable extraShow) {
+        this(ioType, title, id);
+        this.extraRender = extraShow;
+    }
+
+    public Runnable getExtraRenderFN() { return extraRender; }
 
     public IO getIOType() {
         return ioType;
@@ -38,4 +46,6 @@ public class NodeAttribute {
     private int id;
 
     private Node parent = null;
+
+    Runnable extraRender = null;
 }
