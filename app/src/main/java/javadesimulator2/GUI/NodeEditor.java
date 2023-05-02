@@ -1,17 +1,21 @@
 package javadesimulator2.GUI;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.graph.EndpointPair;
-import com.google.common.graph.MutableValueGraph;
-import com.google.common.graph.ValueGraphBuilder;
 
 import imgui.ImGui;
 import imgui.ImVec2;
@@ -26,11 +30,15 @@ public class NodeEditor {
 
     private static int nextID = 0;
 
-    private HashMap<Integer, Node> nodes = new HashMap<>();
-    private HashMap<Integer, NodeAttribute> nodeAttributes = new HashMap<>();
-    MutableValueGraph<Integer, Integer> graph = ValueGraphBuilder.directed()
-            .allowsSelfLoops(false)
-            .build();
+    /*
+     * private HashMap<Integer, Node> nodes = new HashMap<>();
+     * private HashMap<Integer, NodeAttribute> nodeAttributes = new HashMap<>();
+     * private MutableValueGraph<Integer, Integer> graph =
+     * ValueGraphBuilder.directed()
+     * .allowsSelfLoops(false)
+     * .build();
+     */
+    Schematic schematic = new Schematic();
 
     public NodeEditor() {
         ImNodes.createContext();
@@ -92,11 +100,11 @@ public class NodeEditor {
         return constructors;
     }
 
-    private static final Set<Constructor<? extends Node>> nodeCtors = loadComponentConstructors();
+    static final Set<Constructor<? extends Node>> nodeCtors = loadComponentConstructors();
 
     private boolean simulating = false;
 
-    public void showSidebar(boolean shouldShow) {
+    public static void showSidebar(boolean shouldShow) {
         if (!shouldShow)
             return;
 
@@ -121,38 +129,133 @@ public class NodeEditor {
     }
 
     private void simulate() {
-        for (EndpointPair<Integer> edge : graph.edges()) {
+        for (EndpointPair<Integer> edge : schematic.getGraph().edges()) {
             int src = edge.nodeU();
             int dst = edge.nodeV();
 
-            NodeAttribute srcAttribute = nodeAttributes.get(src);
-            NodeAttribute dstAttribute = nodeAttributes.get(dst);
+            NodeAttribute srcAttribute = schematic.getNodeAttributes().get(src);
+            NodeAttribute dstAttribute = schematic.getNodeAttributes().get(dst);
 
             srcAttribute.setState(dstAttribute.getState());
         }
 
-        for (Node node : nodes.values()) {
+        for (Node node : schematic.getNodes().values()) {
             node.update();
         }
     }
 
+    private void clear() {
+        schematic.getNodes().clear();
+        schematic.getNodeAttributes().clear();
+
+        Object[] nodesToRemove = schematic.getGraph().nodes().toArray();
+        for (int i = 0; i < nodesToRemove.length; i++) {
+            schematic.getGraph().removeNode((Integer)nodesToRemove[i]);
+        }
+    }
+
+    public void load(String path) {
+        clear();
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootNode = mapper.readTree(new File(path));
+
+            schematic.load(rootNode.get("schematic"));
+
+            JsonNode editorStateNode = rootNode.path("editorState");
+            if (!editorStateNode.isMissingNode()) {
+                {
+                    JsonNode nextIDNode = editorStateNode.path("nextID");
+                    if(!nextIDNode.isMissingNode()) {
+                        nextID = nextIDNode.asInt(-1);
+                    }
+                }
+
+                JsonNode nodePositionsNode = editorStateNode.path("nodePositions");
+                if (!nodePositionsNode.isMissingNode()) {
+                    Iterator<JsonNode> it = nodePositionsNode.elements();
+                    while (it.hasNext()) {
+                        JsonNode node = it.next();
+
+                        int id;
+                        float x, y;
+
+                        id = node.get("ID").asInt(-1);
+                        x = (float) node.get("x").asDouble(Float.NEGATIVE_INFINITY);
+                        y = (float) node.get("y").asDouble(Float.NEGATIVE_INFINITY);
+
+                        if (id >= 0 && x != Float.NEGATIVE_INFINITY && y != Float.NEGATIVE_INFINITY) {
+                            ImNodes.setNodeGridSpacePos(id, x, y);
+                        } else {
+                            System.out.println("Warning: invalid node grid position!");
+                        }
+                    }
+                }
+            }
+
+            lastSavePath = path;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void serialize(String path) {
+        System.out.println("here");
+
+        try {
+            JsonFactory factory = new JsonFactory();
+            JsonGenerator generator = factory.createGenerator(new File(path), JsonEncoding.UTF8);
+
+            generator.writeStartObject();
+
+            generator.writeFieldName("schematic");
+            generator.writeStartObject();
+            schematic.serialize(generator);
+            generator.writeEndObject();
+
+            generator.writeFieldName("editorState");
+            generator.writeStartObject();
+            generator.writeNumberField("nextID", nextID);
+
+            generator.writeFieldName("nodePositions");
+            generator.writeStartArray();
+            for (Node node : schematic.getNodes().values()) {
+                generator.writeStartObject();
+                generator.writeNumberField("ID", node.getID());
+                generator.writeNumberField("x", ImNodes.getNodeGridSpacePosX(node.getID()));
+                generator.writeNumberField("y", ImNodes.getNodeGridSpacePosY(node.getID()));
+                generator.writeEndObject();
+            }
+            generator.writeEndArray();
+
+            generator.flush();
+            generator.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        lastSavePath = path;
+    }
+
     public void show(boolean shouldShow) {
         ImGui.begin("Nodes");
-        for (Node node : nodes.values()) {
+        for (Node node : schematic.getNodes().values()) {
             ImGui.text("Node " + node.getID());
         }
 
         ImGui.end();
 
         ImGui.begin("attributes");
-        for (NodeAttribute a : nodeAttributes.values()) {
+        for (NodeAttribute a : schematic.getNodeAttributes().values()) {
             ImGui.text("Node " + a.getID());
         }
         ImGui.end();
 
         ImGui.begin("edges");
-        for (EndpointPair<Integer> edge : graph.edges()) {
-            ImGui.text("Edge value: " + graph.edgeValue(edge.nodeU(), edge.nodeV()).get());
+        for (EndpointPair<Integer> edge : schematic.getGraph().edges()) {
+            ImGui.text("Edge value: " + schematic.getGraph().edgeValue(edge.nodeU(), edge.nodeV()).get());
         }
         ImGui.end();
 
@@ -176,14 +279,14 @@ public class NodeEditor {
         ImNodes.miniMap(0.2f, ImNodesMiniMapLocation.TopRight);
         handlePanning();
 
-        for (EndpointPair<Integer> edge : graph.edges()) {
-            java.util.Optional<Integer> edgeValue = graph.edgeValue(edge);
+        for (EndpointPair<Integer> edge : schematic.getGraph().edges()) {
+            java.util.Optional<Integer> edgeValue = schematic.getGraph().edgeValue(edge);
             if (edgeValue.isPresent()) {
                 ImNodes.link(edgeValue.get(), edge.nodeU(), edge.nodeV());
             }
         }
 
-        for (Node node : nodes.values()) {
+        for (Node node : schematic.getNodes().values()) {
             node.show();
         }
 
@@ -207,13 +310,11 @@ public class NodeEditor {
 
                 ImNodes.setNodeScreenSpacePos(node.getID(), ImGui.getMousePosX(), ImGui.getMousePosY());
 
-                nodes.put(node.getID(), node);
+                schematic.getNodes().put(node.getID(), node);
 
                 for (NodeAttribute a : node.getAttributes()) {
-                    graph.addNode(a.getID());
-                    a.setParent(node);
-
-                    nodeAttributes.put(a.getID(), a);
+                    schematic.getGraph().addNode(a.getID());
+                    schematic.getNodeAttributes().put(a.getID(), a);
                 }
             }
             ImGui.endDragDropTarget();
@@ -224,8 +325,8 @@ public class NodeEditor {
             ImInt end = new ImInt();
 
             if (ImNodes.isLinkCreated(start, end)) {
-                NodeAttribute a = nodeAttributes.get(start.get());
-                NodeAttribute b = nodeAttributes.get(end.get());
+                NodeAttribute a = schematic.getNodeAttributes().get(start.get());
+                NodeAttribute b = schematic.getNodeAttributes().get(end.get());
 
                 if (a != null && b != null) {
                     int inputNode = -1, outputNode = -1;
@@ -235,7 +336,11 @@ public class NodeEditor {
                         outputNode = inputNode == a.getID() ? b.getID() : a.getID();
                     }
 
-                    graph.putEdgeValue(inputNode, outputNode, nextID++);
+                    if (schematic.getGraph().incidentEdges(inputNode).size() == 0) { // can't have multiple outputs
+                                                                                     // connected to a
+                        // single input
+                        schematic.getGraph().putEdgeValue(inputNode, outputNode, nextID++);
+                    }
                 } else {
                     System.out.println("Could not find attributes in HashMap");
                 }
@@ -252,10 +357,10 @@ public class NodeEditor {
                     ImNodes.getSelectedLinks(linkIds);
 
                     for (Integer link : linkIds) {
-                        for (EndpointPair<Integer> edge : graph.edges()) {
-                            java.util.Optional<Integer> val = graph.edgeValue(edge);
+                        for (EndpointPair<Integer> edge : schematic.getGraph().edges()) {
+                            java.util.Optional<Integer> val = schematic.getGraph().edgeValue(edge);
                             if (val.isPresent() && val.get() == link) {
-                                graph.removeEdge(edge);
+                                schematic.getGraph().removeEdge(edge);
                                 break;
                             }
                         }
@@ -268,16 +373,16 @@ public class NodeEditor {
 
                     for (Integer nodeID : nodeIds) {
 
-                        Node node = nodes.get(nodeID);
+                        Node node = schematic.getNodes().get(nodeID);
 
                         if (node != null) {
 
                             for (NodeAttribute a : node.getAttributes()) {
-                                nodeAttributes.remove(a.getID());
-                                graph.removeNode(a.getID());
+                                schematic.getNodeAttributes().remove(a.getID());
+                                schematic.getGraph().removeNode(a.getID());
                             }
 
-                            nodes.remove(node.getID());
+                            schematic.getNodes().remove(node.getID());
                         }
                     }
                 }
@@ -287,4 +392,11 @@ public class NodeEditor {
 
         ImGui.end();
     }
+
+    public String getLastSavePath() {
+        return lastSavePath;
+    }
+
+    private String lastSavePath = null;
+
 }

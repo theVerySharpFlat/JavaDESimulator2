@@ -6,9 +6,9 @@ import javadesimulator2.GUI.Node;
 import javadesimulator2.GUI.NodeAttribute;
 import javadesimulator2.GUI.NodeEditor;
 
-public class And extends Node {
-    public And() {
-        super(NodeEditor.getCurrentNextID(), "AND-" + NodeEditor.getNextID(), new ArrayList<NodeAttribute>());
+public class Or extends Node {
+    public Or() {
+        super(NodeEditor.getCurrentNextID(), "OR-" + NodeEditor.getNextID(), new ArrayList<NodeAttribute>());
 
         int idA = NodeEditor.getNextID();
         super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "A", idA, getID()));
@@ -26,7 +26,7 @@ public class And extends Node {
 
     @Override
     public void update() {
-        y.setState(a.getState() & b.getState());
+        y.setState(a.getState() || b.getState());
     }
 
     NodeAttribute a, b, y;

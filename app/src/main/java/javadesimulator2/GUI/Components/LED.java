@@ -13,11 +13,11 @@ public class LED extends Node {
 
         int idY = NodeEditor.getNextID();
         super.getAttributes()
-                .add(new NodeAttribute(NodeAttribute.IO.I, "I", idY, () -> styleBefore(), () -> styleAfter()));
+                .add(new NodeAttribute(NodeAttribute.IO.I, "I", idY, getID()));
     }
 
     public void styleBefore() {
-        
+
     }
 
     public void styleAfter() {
@@ -26,7 +26,19 @@ public class LED extends Node {
     }
 
     @Override
+    protected void renderAttributeContents(NodeAttribute a) {
+        styleBefore();
+        super.renderAttributeContents(a);
+        styleAfter();
+    }
+
+    @Override
     public void update() {
+    }
+
+    @Override
+    protected void matchDonor(Node donor) {
+        super.matchDonor(donor);
     }
 
 }

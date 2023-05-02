@@ -7,21 +7,12 @@ public class NodeAttribute {
         O
     }
 
-    public NodeAttribute(IO ioType, String title, int id) {
+    public NodeAttribute(IO ioType, String title, int id, int parentID) {
         this.ioType = ioType;
         this.title = title;
         this.id = id;
+        this.parent = parentID;
     }
-
-    public NodeAttribute(IO ioType, String title, int id, Runnable before, Runnable after) {
-        this(ioType, title, id);
-        this.before = before;
-        this.after = after;
-    }
-
-    public Runnable getBeforeRenderFN() { return before; }
-    public Runnable getAfterRenderFN() { return after; }
-    
 
     public IO getIOType() {
         return ioType;
@@ -35,12 +26,8 @@ public class NodeAttribute {
         return id;
     }
 
-    public void setParent(Node parent) {
-        if (this.parent == null) {
-            this.parent = parent;
-        } else {
-            System.out.println("error: node already has a parent!");
-        }
+    public int getParentID() {
+        return parent;
     }
 
     public boolean getState() { return state; }
@@ -51,10 +38,7 @@ public class NodeAttribute {
     private String title;
     private int id;
 
-    private Node parent = null;
-
-    Runnable before = null;
-    Runnable after = null;
+    private int parent = Integer.MIN_VALUE;
 
     boolean state = false;
 }

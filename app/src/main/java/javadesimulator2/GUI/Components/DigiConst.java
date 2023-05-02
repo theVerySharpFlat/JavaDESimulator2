@@ -14,8 +14,7 @@ public class DigiConst extends Node {
         super(NodeEditor.getCurrentNextID(), "DIGICONST-" + NodeEditor.getNextID(), new ArrayList<NodeAttribute>());
 
         int idY = NodeEditor.getNextID();
-        super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, () -> outputShowMod(), () -> {
-        }));
+        super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, getID()));
     }
 
     ImBoolean boxState = new ImBoolean(false);
@@ -30,7 +29,18 @@ public class DigiConst extends Node {
     }
 
     @Override
+    protected void renderAttributeContents(NodeAttribute a) {
+        outputShowMod();
+        super.renderAttributeContents(a);
+    }
+
+    @Override
     public void update() {
         super.getAttributes().get(0).setState(boxState.get());
+    }
+
+    @Override
+    protected void matchDonor(Node donor) {
+        super.matchDonor(donor);
     }
 }

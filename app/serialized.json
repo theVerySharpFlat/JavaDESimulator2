@@ -1,0 +1,87 @@
+{
+    "nodes": [
+        {
+            "ID": 0,
+            "type": "DigiConst",
+            "name": "DIGICONST-0",
+            "posX": 210.0,
+            "posY": 167.0
+        },
+        {
+            "ID": 2,
+            "type": "LED",
+            "name": "LED-2",
+            "posX": 575.0,
+            "posY": 218.0
+        },
+        {
+            "ID": 4,
+            "type": "And",
+            "name": "AND-4",
+            "posX": 447.0,
+            "posY": 203.0
+        },
+        {
+            "ID": 9,
+            "type": "DigiConst",
+            "name": "DIGICONST-9",
+            "posX": 210.0,
+            "posY": 264.0
+        }
+    ],
+    "attributes": [
+        {
+            "ID": 1,
+            "parentID": 0,
+            "ioType": "O",
+            "title": "Y"
+        },
+        {
+            "ID": 3,
+            "parentID": 2,
+            "ioType": "I",
+            "title": "I"
+        },
+        {
+            "ID": 5,
+            "parentID": 4,
+            "ioType": "I",
+            "title": "A"
+        },
+        {
+            "ID": 6,
+            "parentID": 4,
+            "ioType": "I",
+            "title": "B"
+        },
+        {
+            "ID": 7,
+            "parentID": 4,
+            "ioType": "O",
+            "title": "Y"
+        },
+        {
+            "ID": 10,
+            "parentID": 9,
+            "ioType": "O",
+            "title": "Y"
+        }
+    ],
+    "links": [
+        {
+            "ID": 12,
+            "src": 3,
+            "dst": 7
+        },
+        {
+            "ID": 8,
+            "src": 5,
+            "dst": 1
+        },
+        {
+            "ID": 11,
+            "src": 6,
+            "dst": 10
+        }
+    ]
+}

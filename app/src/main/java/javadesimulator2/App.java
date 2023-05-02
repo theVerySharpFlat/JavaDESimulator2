@@ -3,13 +3,18 @@
  */
 package javadesimulator2;
 
+import java.util.Map;
+
+import com.google.common.io.Files;
+
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.app.Application;
 import imgui.app.Configuration;
+import imgui.extension.imguifiledialog.ImGuiFileDialog;
+import imgui.extension.imguifiledialog.flag.ImGuiFileDialogFlags;
 import javadesimulator2.GUI.*;
 import imgui.flag.ImGuiConfigFlags;
-
 
 public class App extends Application {
     @Override
@@ -30,13 +35,74 @@ public class App extends Application {
         nodeEditor = new NodeEditor();
     }
 
+    public void openFileDialog(String id, String title) {
+        ImGuiFileDialog.openDialog(id, title, ".jde2", ".",
+                "", 1, 0, ImGuiFileDialogFlags.None);
+    }
+
     @Override
     public void process() {
         ImGui.dockSpaceOverViewport();
-        
-        nodeEditor.showSidebar(true);
+
+        ImGui.beginMainMenuBar();
+        if (ImGui.beginMenu("File")) {
+
+            if (ImGui.menuItem("save as")) {
+                openFileDialog("browse-save", "Save As");
+            }
+
+            if (ImGui.menuItem("save")) {
+                if (nodeEditor.getLastSavePath() == null) {
+                    openFileDialog("browse-save", "Save As");
+                } else {
+                    nodeEditor.serialize(nodeEditor.getLastSavePath());
+                }
+            }
+
+            if (ImGui.menuItem("open")) {
+                openFileDialog("browse-open", "Open");
+            }
+
+            if (ImGui.menuItem("new")) {
+
+            }
+            ImGui.endMenu();
+        }
+
+        ImGui.endMainMenuBar();
+
+        if (ImGuiFileDialog.display("browse-save", ImGuiFileDialogFlags.None, 200, 400, 800, 600)) {
+            if (ImGuiFileDialog.isOk()) {
+                Map<String, String> filenames = ImGuiFileDialog.getSelection();
+                if (filenames != null && filenames.size() > 0) {
+                    nodeEditor.serialize(filenames.values().stream().findFirst().get());
+                } else if (ImGuiFileDialog.getFilePathName() != null
+                        && ImGuiFileDialog.getFilePathName().length() > 0) {
+                    String path = ImGuiFileDialog.getFilePathName();
+                    String extension = Files.getFileExtension(path);
+                    if (!extension.equals("jde2")) {
+                        path = path + ".jde2";
+                    }
+                    nodeEditor.serialize(path);
+                }
+            }
+            ImGuiFileDialog.close();
+        }
+
+        if (ImGuiFileDialog.display("browse-open", ImGuiFileDialogFlags.None, 200, 400, 800, 600)) {
+            if (ImGuiFileDialog.isOk()) {
+                Map<String, String> filenames = ImGuiFileDialog.getSelection();
+                if (filenames != null && filenames.size() > 0) {
+                    nodeEditor.load(filenames.values().stream().findFirst().get());
+                }
+            }
+            ImGuiFileDialog.close();
+        }
+
+        NodeEditor.showSidebar(true);
 
         nodeEditor.show(true);
+
     }
 
     public static void main(String[] args) {
