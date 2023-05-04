@@ -1,6 +1,7 @@
 package javadesimulator2.GUI;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import imgui.ImGui;
 import imgui.extension.imnodes.ImNodes;
@@ -71,6 +72,9 @@ public class Node {
 
     public void update() {
     }; // Not neccesarry, but you should override me!
+    
+    public HashMap<String, String> getCustomData() { return new HashMap<>(); }
+    public void loadCustomData(HashMap<String, String> data) {}
 
     private ArrayList<NodeAttribute> attributes;
     private int id;

@@ -7,9 +7,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
@@ -41,6 +47,8 @@ public class Schematic implements Serializable {
     }
 
     public void serialize(JsonGenerator generator) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+
         generator.writeFieldName("nodes");
         generator.writeStartArray();
         for (Node node : nodes.values()) {
@@ -48,6 +56,10 @@ public class Schematic implements Serializable {
             generator.writeNumberField("ID", node.getID());
             generator.writeStringField("name", node.getName());
             generator.writeStringField("type", node.getClass().getSimpleName());
+
+            generator.writeFieldName("customData");
+            generator.writeString(mapper.writeValueAsString(node.getCustomData()));
+
             generator.writeEndObject();
         }
         generator.writeEndArray();
@@ -119,6 +131,7 @@ public class Schematic implements Serializable {
             }
         }
 
+        ObjectMapper mapper = new ObjectMapper();
         JsonNode nodesNode = root.get("nodes");
         if (nodesNode != null) {
             Iterator<JsonNode> it = nodesNode.elements();
@@ -158,11 +171,25 @@ public class Schematic implements Serializable {
                     return;
                 }
 
+                HashMap<String, String> customDataMap = null;
+                mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                JsonNode customDataNode = node.path("customData");
+                if(!customDataNode.isMissingNode()) {
+                    try {
+                     customDataMap = mapper.readValue(customDataNode.asText(), new TypeReference<HashMap<String, String>>(){});
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+                }
+
                 Node donor = new Node(id, name, nodeToAttributesMap.get(id));
 
                 try {
                     Node newNode = foundCtor.newInstance();
                     newNode.matchDonor(donor);
+                    if(customDataMap != null) {
+                        newNode.loadCustomData(customDataMap);
+                    }
 
                     nodes.put(newNode.getID(), newNode);
                 } catch (InstantiationException | IllegalAccessException | IllegalArgumentException

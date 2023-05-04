@@ -1,6 +1,7 @@
 package javadesimulator2.GUI.Components;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import imgui.ImGui;
 import imgui.type.ImBoolean;
@@ -42,5 +43,20 @@ public class DigiConst extends Node {
     @Override
     protected void matchDonor(Node donor) {
         super.matchDonor(donor);
+    }
+
+    @Override
+    public HashMap<String, String> getCustomData() {
+        HashMap<String, String> map = new HashMap<>();
+
+        map.put("state", Boolean.toString(boxState.get()));
+
+        return map;
+    }
+
+    @Override
+    public void loadCustomData(HashMap<String, String> data) {
+        String strState = data.getOrDefault("state", "false");
+        boxState.set(Boolean.valueOf(strState));
     }
 }

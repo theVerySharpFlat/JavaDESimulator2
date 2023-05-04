@@ -30,14 +30,6 @@ public class NodeEditor {
 
     private static int nextID = 0;
 
-    /*
-     * private HashMap<Integer, Node> nodes = new HashMap<>();
-     * private HashMap<Integer, NodeAttribute> nodeAttributes = new HashMap<>();
-     * private MutableValueGraph<Integer, Integer> graph =
-     * ValueGraphBuilder.directed()
-     * .allowsSelfLoops(false)
-     * .build();
-     */
     Schematic schematic = new Schematic();
 
     public NodeEditor() {
