@@ -36,6 +36,8 @@ public class Node {
         ImGui.text(a.getTitle());
     }
 
+    protected void renderNodeBottomContents() {}
+
     public void show() {
         ImNodes.beginNode(getID());
         ImNodes.getStyle().setNodeCornerRounding(0.0f);
@@ -61,6 +63,8 @@ public class Node {
             }
         }
 
+        renderNodeBottomContents();
+
         ImNodes.endNode();
     }
 
@@ -72,6 +76,8 @@ public class Node {
 
     public void update() {
     }; // Not neccesarry, but you should override me!
+    
+    public boolean canBeUsedInSchematic(Schematic schematic) { return true; }
     
     public HashMap<String, String> getCustomData() { return new HashMap<>(); }
     public void loadCustomData(HashMap<String, String> data) {}

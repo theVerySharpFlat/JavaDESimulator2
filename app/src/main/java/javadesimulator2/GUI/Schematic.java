@@ -7,13 +7,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -30,9 +28,18 @@ public class Schematic implements Serializable {
             .allowsSelfLoops(false)
             .build();
 
-    public Schematic() {
-
+    public enum Type {
+        ROOT,
+        COMPONENT
     }
+
+    private Type type;
+
+    public Schematic(Type type) {
+        this.type = type;
+    }
+
+    public Type getType() { return type; }
 
     public HashMap<Integer, Node> getNodes() {
         return nodes;
@@ -48,6 +55,8 @@ public class Schematic implements Serializable {
 
     public void serialize(JsonGenerator generator) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
+
+        generator.writeStringField("type", type.toString());
 
         generator.writeFieldName("nodes");
         generator.writeStartArray();
@@ -90,6 +99,8 @@ public class Schematic implements Serializable {
 
     public void load(JsonNode root) {
         HashMap<Integer, ArrayList<NodeAttribute>> nodeToAttributesMap = new HashMap<>();
+
+        type = Type.valueOf(root.path("type").asText("ROOT"));
 
         JsonNode attributesNode = root.get("nodeAttributes");
         if (attributesNode != null) {

@@ -30,7 +30,7 @@ public class NodeEditor {
 
     private static int nextID = 0;
 
-    Schematic schematic = new Schematic();
+    Schematic schematic = new Schematic(Schematic.Type.ROOT);
 
     public NodeEditor() {
         ImNodes.createContext();
@@ -96,7 +96,7 @@ public class NodeEditor {
 
     private boolean simulating = false;
 
-    public static void showSidebar(boolean shouldShow) {
+    public void showSidebar(boolean shouldShow) {
         if (!shouldShow)
             return;
 
@@ -105,6 +105,10 @@ public class NodeEditor {
         float width = ImGui.getWindowWidth();
 
         for (Constructor<? extends Node> ctor : nodeCtors) {
+            if (schematic.getType() != Schematic.Type.COMPONENT
+                    && ctor.getDeclaringClass().isAnnotationPresent(ComponentMeta.class))
+                continue;
+
             String name = ctor.getDeclaringClass().getSimpleName().toUpperCase();
             ImGui.pushID(name + "-BTN");
             ImGui.button(name, width - 10.0f, 50.0f);
@@ -136,18 +140,13 @@ public class NodeEditor {
         }
     }
 
-    private void clear() {
-        schematic.getNodes().clear();
-        schematic.getNodeAttributes().clear();
-
-        Object[] nodesToRemove = schematic.getGraph().nodes().toArray();
-        for (int i = 0; i < nodesToRemove.length; i++) {
-            schematic.getGraph().removeNode((Integer)nodesToRemove[i]);
-        }
+    public void newSchematic(Schematic.Type type) {
+        schematic = new Schematic(type);
+        ImNodes.editorResetPanning(0, 0);
     }
 
     public void load(String path) {
-        clear();
+        newSchematic(Schematic.Type.ROOT); // Type overwritten by load
 
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -159,7 +158,7 @@ public class NodeEditor {
             if (!editorStateNode.isMissingNode()) {
                 {
                     JsonNode nextIDNode = editorStateNode.path("nextID");
-                    if(!nextIDNode.isMissingNode()) {
+                    if (!nextIDNode.isMissingNode()) {
                         nextID = nextIDNode.asInt(-1);
                     }
                 }
@@ -251,7 +250,7 @@ public class NodeEditor {
         }
         ImGui.end();
 
-        if (simulating) {
+        if (simulating && schematic.getType() == Schematic.Type.ROOT) {
             simulate();
         }
 
@@ -261,9 +260,11 @@ public class NodeEditor {
         }
 
         ImGui.begin("Node Editor");
-        ImGui.setCursorPosX(ImGui.getWindowSizeX() / 2.0f - ImGui.calcTextSize("play").x);
-        if (ImGui.button(simulating ? "stop" : "play")) {
-            simulating = !simulating;
+        if (schematic.getType() == Schematic.Type.ROOT) {
+            ImGui.setCursorPosX(ImGui.getWindowSizeX() / 2.0f - ImGui.calcTextSize("play").x);
+            if (ImGui.button(simulating ? "stop" : "play")) {
+                simulating = !simulating;
+            }
         }
         ImNodes.editorContextSet(context);
         ImNodes.beginNodeEditor();

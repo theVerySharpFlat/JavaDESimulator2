@@ -40,6 +40,14 @@ public class App extends Application {
                 "", 1, 0, ImGuiFileDialogFlags.None);
     }
 
+    public void save() {
+        if (nodeEditor.getLastSavePath() == null) {
+            openFileDialog("browse-save", "Save As");
+        } else {
+            nodeEditor.serialize(nodeEditor.getLastSavePath());
+        }
+    }
+
     @Override
     public void process() {
         ImGui.dockSpaceOverViewport();
@@ -52,20 +60,23 @@ public class App extends Application {
             }
 
             if (ImGui.menuItem("save")) {
-                if (nodeEditor.getLastSavePath() == null) {
-                    openFileDialog("browse-save", "Save As");
-                } else {
-                    nodeEditor.serialize(nodeEditor.getLastSavePath());
-                }
+                save();
             }
 
             if (ImGui.menuItem("open")) {
                 openFileDialog("browse-open", "Open");
             }
 
-            if (ImGui.menuItem("new")) {
-
+            if (ImGui.menuItem("new project")) {
+                save();
+                nodeEditor.newSchematic(Schematic.Type.ROOT);
             }
+
+            if (ImGui.menuItem("new component")) {
+                save();
+                nodeEditor.newSchematic(Schematic.Type.COMPONENT);
+            }
+
             ImGui.endMenu();
         }
 
@@ -99,7 +110,7 @@ public class App extends Application {
             ImGuiFileDialog.close();
         }
 
-        NodeEditor.showSidebar(true);
+        nodeEditor.showSidebar(true);
 
         nodeEditor.show(true);
 

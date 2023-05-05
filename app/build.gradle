@@ -10,6 +10,7 @@ import org.gradle.internal.os.OperatingSystem
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
+    id "com.diffplug.spotless" version "6.18.0"
 }
 
 
@@ -101,4 +102,17 @@ application {
 tasks.named('test') {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+spotless {
+  java {
+    // Use the default importOrder configuration
+    importOrder()
+
+    removeUnusedImports()
+
+    googleJavaFormat()
+
+    formatAnnotations()  // fixes formatting of type annotations, see below
+  }
 }
