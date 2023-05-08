@@ -74,6 +74,10 @@ public class App extends Application {
         nodeEditor.newSchematic(Schematic.Type.COMPONENT);
       }
 
+      if(ImGui.menuItem("optimize IDs")) {
+        nodeEditor.optimizeIDs();
+      }
+
       ImGui.endMenu();
     }
 

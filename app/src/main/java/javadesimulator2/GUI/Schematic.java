@@ -10,21 +10,29 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
+
+import imgui.ImVec2;
+import imgui.extension.imnodes.ImNodes;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 
 public class Schematic implements Serializable {
   private HashMap<Integer, Node> nodes = new HashMap<>();
   private HashMap<Integer, NodeAttribute> nodeAttributes = new HashMap<>();
 
+  private int nextID = 0;
+
   @JsonSerialize(using = NodeGraphSerializer.class)
-  private MutableValueGraph<Integer, Integer> graph =
-      ValueGraphBuilder.directed().allowsSelfLoops(false).build();
+  private MutableValueGraph<Integer, Integer> graph = ValueGraphBuilder.directed().allowsSelfLoops(false).build();
 
   public enum Type {
     ROOT,
@@ -51,6 +59,14 @@ public class Schematic implements Serializable {
 
   public MutableValueGraph<Integer, Integer> getGraph() {
     return graph;
+  }
+
+  public int getNextID() {
+    return nextID++;
+  }
+
+  public int getCurrentNextID() {
+    return nextID;
   }
 
   public void serialize(JsonGenerator generator) throws IOException {
@@ -177,8 +193,8 @@ public class Schematic implements Serializable {
         }
 
         if (!nodeToAttributesMap.containsKey(id)) {
-          System.out.println("Failed to find attributes that match node!");
-          return;
+          System.out.println("Warning: failed to find attributes that match node!");
+          // return;
         }
 
         HashMap<String, String> customDataMap = null;
@@ -186,18 +202,18 @@ public class Schematic implements Serializable {
         JsonNode customDataNode = node.path("customData");
         if (!customDataNode.isMissingNode()) {
           try {
-            customDataMap =
-                mapper.readValue(
-                    customDataNode.asText(), new TypeReference<HashMap<String, String>>() {});
+            customDataMap = mapper.readValue(
+                customDataNode.asText(), new TypeReference<HashMap<String, String>>() {
+                });
           } catch (JsonProcessingException e) {
             e.printStackTrace();
           }
         }
 
-        Node donor = new Node(id, name, nodeToAttributesMap.get(id));
+        Node donor = new Node(id, name, nodeToAttributesMap.getOrDefault(id, new ArrayList<>()));
 
         try {
-          Node newNode = foundCtor.newInstance();
+          Node newNode = foundCtor.newInstance(this);
           newNode.matchDonor(donor);
           if (customDataMap != null) {
             newNode.loadCustomData(customDataMap);
@@ -236,5 +252,108 @@ public class Schematic implements Serializable {
         graph.putEdgeValue(u, v, id);
       }
     }
+  }
+
+  public void optimizeIDs() {
+    ArrayList<Integer> ids = new ArrayList<>();
+
+    for (Node node : nodes.values()) {
+      ids.add(node.getID());
+
+      for (NodeAttribute attribute : node.getAttributes()) {
+        ids.add(attribute.getID());
+      }
+    }
+
+    for (EndpointPair<Integer> edge : graph.edges()) {
+      ids.add(graph.edgeValue(edge).get());
+    }
+
+    // ids.sort(Comparator.naturalOrder());
+
+    HashMap<Integer, Integer> oldIDToNewIDMap = new HashMap<>();
+    for (int i = 0; i < ids.size(); i++) {
+      oldIDToNewIDMap.put(ids.get(i), i);
+    }
+
+    HashMap<Integer, Node> newNodeMap = new HashMap<>();
+    HashMap<Integer, NodeAttribute> newNodeAttributeMap = new HashMap<>();
+
+    HashMap<Integer, ImVec2> newNodeToPositionMap = new HashMap<>();
+
+    for (Integer oldID : nodes.keySet()) {
+      Node node = nodes.get(oldID);
+      int newID = oldIDToNewIDMap.getOrDefault(oldID, -1);
+
+      newNodeToPositionMap.put(newID,
+          new ImVec2(ImNodes.getNodeGridSpacePosX(oldID), ImNodes.getNodeGridSpacePosY(oldID)));
+
+      if (newID == -1) {
+        System.out.println("error: newID == -1");
+        continue;
+      }
+
+      node.setID(newID);
+      node.updateName();
+
+      /*
+       * ImNodes.setNodeGridSpacePos(node.getID(),
+       * ImNodes.getNodeGridSpacePosX(oldID),
+       * ImNodes.getNodeGridSpacePosY(oldID));
+       */
+
+      for (Integer oldAttributeID : nodeAttributes.keySet()) {
+        NodeAttribute attribute = nodeAttributes.get(oldAttributeID);
+
+        int newAttributeID = oldIDToNewIDMap.getOrDefault(oldAttributeID, -1);
+
+        if (newAttributeID == -1) {
+          System.out.println("error: newAttributeID == -1");
+          continue;
+        }
+
+        attribute.setParentID(newID);
+        attribute.setID(newAttributeID);
+
+        newNodeAttributeMap.put(newAttributeID, attribute);
+      }
+
+      newNodeMap.put(newID, node);
+    }
+
+    MutableValueGraph<Integer, Integer> newGraph = ValueGraphBuilder.directed().allowsSelfLoops(false).build();
+    for (EndpointPair<Integer> oldEdge : graph.edges()) {
+      int oldU = oldEdge.nodeU();
+      int oldV = oldEdge.nodeV();
+
+      int newU = oldIDToNewIDMap.getOrDefault(oldU, -1);
+      int newV = oldIDToNewIDMap.getOrDefault(oldV, -1);
+
+      if (newU == -1 || newV == -1) {
+        System.out.println("newU = -1 || newV == -1!");
+        continue;
+      }
+
+      newGraph.putEdgeValue(newU, newV, oldIDToNewIDMap.getOrDefault(graph.edgeValue(oldEdge).get(), -1));
+    }
+
+    for (NodeAttribute attribute : newNodeAttributeMap.values()) {
+      newGraph.addNode(attribute.getID());
+    }
+
+    graph = newGraph;
+    nodes = newNodeMap;
+    nodeAttributes = newNodeAttributeMap;
+
+    for(Node node : nodes.values()) {
+      ImVec2 pos = newNodeToPositionMap.getOrDefault(node.getID(), new ImVec2(0.0f, 0.0f));
+      ImNodes.setNodeGridSpacePos(node.getID(), pos.x, pos.y);
+    }
+
+    nextID = ids.size();
+  }
+
+  public void setNextID(int id) {
+    nextID = id;
   }
 }

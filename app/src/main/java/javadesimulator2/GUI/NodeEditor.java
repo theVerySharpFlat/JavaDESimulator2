@@ -25,20 +25,10 @@ import org.reflections.util.FilterBuilder;
 public class NodeEditor {
   final ImNodesContext context = new ImNodesContext();
 
-  private static int nextID = 0;
-
   Schematic schematic = new Schematic(Schematic.Type.ROOT);
 
   public NodeEditor() {
     ImNodes.createContext();
-  }
-
-  public static int getNextID() {
-    return nextID++;
-  }
-
-  public static int getCurrentNextID() {
-    return nextID;
   }
 
   ImVec2 lastHeldMousePosition;
@@ -70,11 +60,10 @@ public class NodeEditor {
   private static Set<Constructor<? extends Node>> loadComponentConstructors() {
     final String packageName = "javadesimulator2.GUI.Components";
 
-    Reflections reflections =
-        new Reflections(
-            new ConfigurationBuilder()
-                .forPackage(packageName)
-                .filterInputsBy(new FilterBuilder().includePackage(packageName)));
+    Reflections reflections = new Reflections(
+        new ConfigurationBuilder()
+            .forPackage(packageName)
+            .filterInputsBy(new FilterBuilder().includePackage(packageName)));
 
     Set<Class<? extends Node>> classes = reflections.getSubTypesOf(Node.class);
 
@@ -82,7 +71,7 @@ public class NodeEditor {
 
     for (Class<? extends Node> c : classes) {
       try {
-        constructors.add(c.getConstructor());
+        constructors.add(c.getConstructor(Schematic.class));
       } catch (NoSuchMethodException e) {
         System.out.println(e.getMessage());
       }
@@ -96,7 +85,8 @@ public class NodeEditor {
   private boolean simulating = false;
 
   public void showSidebar(boolean shouldShow) {
-    if (!shouldShow) return;
+    if (!shouldShow)
+      return;
 
     ImGui.begin("Sidebar");
 
@@ -104,7 +94,8 @@ public class NodeEditor {
 
     for (Constructor<? extends Node> ctor : nodeCtors) {
       if (schematic.getType() != Schematic.Type.COMPONENT
-          && ctor.getDeclaringClass().isAnnotationPresent(ComponentMeta.class)) continue;
+          && ctor.getDeclaringClass().isAnnotationPresent(ComponentMeta.class))
+        continue;
 
       String name = ctor.getDeclaringClass().getSimpleName().toUpperCase();
       ImGui.pushID(name + "-BTN");
@@ -155,7 +146,7 @@ public class NodeEditor {
         {
           JsonNode nextIDNode = editorStateNode.path("nextID");
           if (!nextIDNode.isMissingNode()) {
-            nextID = nextIDNode.asInt(-1);
+            schematic.setNextID(nextIDNode.asInt(-1));
           }
         }
 
@@ -204,7 +195,7 @@ public class NodeEditor {
 
       generator.writeFieldName("editorState");
       generator.writeStartObject();
-      generator.writeNumberField("nextID", nextID);
+      generator.writeNumberField("nextID", schematic.getNextID());
 
       generator.writeFieldName("nodePositions");
       generator.writeStartArray();
@@ -228,6 +219,7 @@ public class NodeEditor {
 
   public void show(boolean shouldShow) {
     ImGui.begin("Nodes");
+    ImGui.text("Next ID " + schematic.getCurrentNextID());
     for (Node node : schematic.getNodes().values()) {
       ImGui.text("Node " + node.getID());
     }
@@ -286,8 +278,10 @@ public class NodeEditor {
       if (raw != null) {
         Constructor<? extends Node> ctor = (Constructor<? extends Node>) (raw); // Trust me bro
         Node node = null;
+        int preCreationNextID = schematic.getNextID(); // In case we need to reset
+
         try {
-          node = ctor.newInstance();
+          node = ctor.newInstance(schematic);
         } catch (Exception e) {
           System.out.println(e.getMessage());
         }
@@ -297,13 +291,18 @@ public class NodeEditor {
           return;
         }
 
-        ImNodes.setNodeScreenSpacePos(node.getID(), ImGui.getMousePosX(), ImGui.getMousePosY());
+        if (node.canBeUsedInSchematic(schematic)) {
 
-        schematic.getNodes().put(node.getID(), node);
+          ImNodes.setNodeScreenSpacePos(node.getID(), ImGui.getMousePosX(), ImGui.getMousePosY());
 
-        for (NodeAttribute a : node.getAttributes()) {
-          schematic.getGraph().addNode(a.getID());
-          schematic.getNodeAttributes().put(a.getID(), a);
+          schematic.getNodes().put(node.getID(), node);
+
+          for (NodeAttribute a : node.getAttributes()) {
+            schematic.getGraph().addNode(a.getID());
+            schematic.getNodeAttributes().put(a.getID(), a);
+          }
+        } else {
+          schematic.setNextID(preCreationNextID);
         }
       }
       ImGui.endDragDropTarget();
@@ -325,11 +324,10 @@ public class NodeEditor {
             outputNode = inputNode == a.getID() ? b.getID() : a.getID();
           }
 
-          if (schematic.getGraph().incidentEdges(inputNode).size()
-              == 0) { // can't have multiple outputs
+          if (schematic.getGraph().incidentEdges(inputNode).size() == 0) { // can't have multiple outputs
             // connected to a
             // single input
-            schematic.getGraph().putEdgeValue(inputNode, outputNode, nextID++);
+            schematic.getGraph().putEdgeValue(inputNode, outputNode, schematic.getNextID());
           }
         } else {
           System.out.println("Could not find attributes in HashMap");
@@ -382,6 +380,10 @@ public class NodeEditor {
 
   public String getLastSavePath() {
     return lastSavePath;
+  }
+
+  public void optimizeIDs() {
+    schematic.optimizeIDs();
   }
 
   private String lastSavePath = null;

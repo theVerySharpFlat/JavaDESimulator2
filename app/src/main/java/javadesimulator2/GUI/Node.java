@@ -17,8 +17,16 @@ public class Node {
     return attributes;
   }
 
+  public void updateName() {
+    name = getClass().getSimpleName().toUpperCase() + "-" + id;
+  }
+
   public int getID() {
     return id;
+  }
+
+  void setID(int id) {
+    this.id = id;
   }
 
   public String getName() {
@@ -31,11 +39,11 @@ public class Node {
           ImNodes.getNodeScreenSpacePosX(getID())
               - ImGui.getWindowPos().x
               + ImNodes.getNodeDimensionsX(getID())
-              - ImGui.calcTextSize(a.getTitle()).x
+              - ImGui.calcTextSize(a.getTitle() + a.getID() + "_").x
               - 10.0f);
     }
 
-    ImGui.text(a.getTitle());
+    ImGui.text(a.getTitle() + "_" + a.getID());
   }
 
   protected void renderNodeBottomContents() {}

@@ -3,22 +3,22 @@ package javadesimulator2.GUI.Components;
 import java.util.ArrayList;
 import javadesimulator2.GUI.Node;
 import javadesimulator2.GUI.NodeAttribute;
-import javadesimulator2.GUI.NodeEditor;
+import javadesimulator2.GUI.Schematic;
 
 public class Or extends Node {
-  public Or() {
+  public Or(Schematic schematic) {
     super(
-        NodeEditor.getCurrentNextID(),
-        "OR-" + NodeEditor.getNextID(),
+        schematic.getCurrentNextID(),
+        "OR-" + schematic.getNextID(),
         new ArrayList<NodeAttribute>());
 
-    int idA = NodeEditor.getNextID();
+    int idA = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "A", idA, getID()));
 
-    int idB = NodeEditor.getNextID();
+    int idB = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "B", idB, getID()));
 
-    int idY = NodeEditor.getNextID();
+    int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, getID()));
 
     a = super.getAttributes().get(0);

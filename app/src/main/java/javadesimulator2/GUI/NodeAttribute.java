@@ -25,8 +25,16 @@ public class NodeAttribute {
     return id;
   }
 
+  void setID(int id) {
+    this.id = id;
+  }
+
   public int getParentID() {
     return parent;
+  }
+
+  void setParentID(int id) {
+    parent = id;
   }
 
   public boolean getState() {

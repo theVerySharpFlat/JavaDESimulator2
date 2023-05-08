@@ -4,16 +4,16 @@ import imgui.ImGui;
 import java.util.ArrayList;
 import javadesimulator2.GUI.Node;
 import javadesimulator2.GUI.NodeAttribute;
-import javadesimulator2.GUI.NodeEditor;
+import javadesimulator2.GUI.Schematic;
 
 public class LED extends Node {
-  public LED() {
+  public LED(Schematic schematic) {
     super(
-        NodeEditor.getCurrentNextID(),
-        "LED-" + NodeEditor.getNextID(),
+        schematic.getCurrentNextID(),
+        "LED-" + schematic.getNextID(),
         new ArrayList<NodeAttribute>());
 
-    int idY = NodeEditor.getNextID();
+    int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "I", idY, getID()));
   }
 

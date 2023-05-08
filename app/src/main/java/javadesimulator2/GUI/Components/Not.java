@@ -3,19 +3,19 @@ package javadesimulator2.GUI.Components;
 import java.util.ArrayList;
 import javadesimulator2.GUI.Node;
 import javadesimulator2.GUI.NodeAttribute;
-import javadesimulator2.GUI.NodeEditor;
+import javadesimulator2.GUI.Schematic;
 
 public class Not extends Node {
-  public Not() {
+  public Not(Schematic schematic) {
     super(
-        NodeEditor.getCurrentNextID(),
-        "NOT-" + NodeEditor.getNextID(),
+        schematic.getCurrentNextID(),
+        "NOT-" + schematic.getNextID(),
         new ArrayList<NodeAttribute>());
 
-    int idA = NodeEditor.getNextID();
+    int idA = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "A", idA, getID()));
 
-    int idY = NodeEditor.getNextID();
+    int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, getID()));
 
     a = super.getAttributes().get(0);

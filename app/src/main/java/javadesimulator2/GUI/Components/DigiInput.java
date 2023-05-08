@@ -7,19 +7,18 @@ import java.util.HashMap;
 import javadesimulator2.GUI.ComponentMeta;
 import javadesimulator2.GUI.Node;
 import javadesimulator2.GUI.NodeAttribute;
-import javadesimulator2.GUI.NodeEditor;
 import javadesimulator2.GUI.Schematic;
 
 @ComponentMeta
 public class DigiInput extends Node {
 
-  public DigiInput() {
+  public DigiInput(Schematic schematic) {
     super(
-        NodeEditor.getCurrentNextID(),
-        "DIGIIN-" + NodeEditor.getNextID(),
+        schematic.getCurrentNextID(),
+        "DIGIIN-" + schematic.getNextID(),
         new ArrayList<NodeAttribute>());
 
-    int idY = NodeEditor.getNextID();
+    int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, getID()));
   }
 

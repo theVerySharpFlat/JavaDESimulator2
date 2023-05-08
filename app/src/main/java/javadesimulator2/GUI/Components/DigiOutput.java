@@ -1,45 +1,43 @@
 package javadesimulator2.GUI.Components;
 
 import imgui.ImGui;
-import imgui.type.ImBoolean;
+import imgui.type.ImString;
 import java.util.ArrayList;
 import java.util.HashMap;
+import javadesimulator2.GUI.ComponentMeta;
 import javadesimulator2.GUI.Node;
 import javadesimulator2.GUI.NodeAttribute;
 import javadesimulator2.GUI.Schematic;
 
-public class DigiConst extends Node {
+@ComponentMeta
+public class DigiOutput extends Node {
 
-  public DigiConst(Schematic schematic) {
+  public DigiOutput(Schematic schematic) {
     super(
         schematic.getCurrentNextID(),
-        "DIGICONST-" + schematic.getNextID(),
+        "DIGIOUT-" + schematic.getNextID(),
         new ArrayList<NodeAttribute>());
 
     int idY = schematic.getNextID();
-    super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, getID()));
+    super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "Y", idY, getID()));
   }
 
-  ImBoolean boxState = new ImBoolean(false);
-
-  public void outputShowMod() {
-    ImGui.checkbox("##Checkbox", boxState);
-
-    ImGui.sameLine();
-    ImGui.text(boxState.get() ? "ON" : "OFF");
-
-    ImGui.sameLine();
-  }
+  ImString name = new ImString(10);
 
   @Override
   protected void renderAttributeContents(NodeAttribute a) {
-    outputShowMod();
     super.renderAttributeContents(a);
   }
 
   @Override
+  protected void renderNodeBottomContents() {
+    ImGui.pushItemWidth(ImGui.calcTextSize("c".repeat(name.getBufferSize())).x);
+    ImGui.inputText("name", name);
+  }
+
+  @Override
   public void update() {
-    super.getAttributes().get(0).setState(boxState.get());
+    // N/A
   }
 
   @Override
@@ -51,14 +49,18 @@ public class DigiConst extends Node {
   public HashMap<String, String> getCustomData() {
     HashMap<String, String> map = new HashMap<>();
 
-    map.put("state", Boolean.toString(boxState.get()));
+    map.put("name", name.get());
 
     return map;
   }
 
   @Override
   public void loadCustomData(HashMap<String, String> data) {
-    String strState = data.getOrDefault("state", "false");
-    boxState.set(Boolean.valueOf(strState));
+    name.set(data.getOrDefault("name", "UNTITLED"));
+  }
+
+  @Override
+  public boolean canBeUsedInSchematic(Schematic schematic) {
+    return schematic.getType() == Schematic.Type.COMPONENT;
   }
 }
