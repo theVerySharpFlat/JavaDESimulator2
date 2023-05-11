@@ -13,6 +13,8 @@ import imgui.extension.imnodes.ImNodesContext;
 import imgui.extension.imnodes.flag.ImNodesMiniMapLocation;
 import imgui.flag.ImGuiFocusedFlags;
 import imgui.type.ImInt;
+import javadesimulator2.GUI.Components.CustomNode;
+
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.util.HashSet;
@@ -108,6 +110,28 @@ public class NodeEditor {
       ImGui.popID();
     }
 
+    if (lastSavePath != null && lastSavePath.length() > 0) {
+      File[] componentFiles = new File(new File(lastSavePath).getParent())
+          .listFiles((dir, name) -> name.endsWith("jde2c"));
+
+      for (int i = 0; i < componentFiles.length; i++) {
+        // remove abs path
+        componentFiles[i] = new File(componentFiles[i].getPath().replace((new File(lastSavePath).getParent()), ""));
+      }
+
+      for (File file : componentFiles) {
+        ImGui.pushID(file.getName() + "-BTN");
+        ImGui.button(file.getName(), width - 10.0f, 50.0f);
+        if (ImGui.beginDragDropSource()) {
+          ImGui.setDragDropPayload("NEW-CUSTOM-COMPONENT", file.getPath());
+          System.out.println(file.getPath());
+          ImGui.button(file.getName(), width, 50.0f);
+          ImGui.endDragDropSource();
+        }
+        ImGui.popID();
+      }
+    }
+
     ImGui.end();
   }
 
@@ -139,7 +163,7 @@ public class NodeEditor {
       ObjectMapper mapper = new ObjectMapper();
       JsonNode rootNode = mapper.readTree(new File(path));
 
-      schematic.load(rootNode.get("schematic"));
+      schematic.load(rootNode.get("schematic"), new File(new File(path).getParent()));
 
       JsonNode editorStateNode = rootNode.path("editorState");
       if (!editorStateNode.isMissingNode()) {
@@ -170,9 +194,8 @@ public class NodeEditor {
             }
           }
         }
+        lastSavePath = path;
       }
-
-      lastSavePath = path;
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -305,6 +328,20 @@ public class NodeEditor {
           schematic.setNextID(preCreationNextID);
         }
       }
+
+      raw = ImGui.acceptDragDropPayload("NEW-CUSTOM-COMPONENT");
+      if (raw != null && lastSavePath != null) {
+        String path = (String) raw;
+        path = path.replace((new File(lastSavePath)).getParent(), "");
+        if (path.charAt(0) == '/' || path.charAt(0) == '\\') {
+          path = path.substring(1);
+        }
+
+        System.out.println("path: " + path);
+        CustomNode customNode = addCustomNode(new File(path));
+        ImNodes.setNodeScreenSpacePos(customNode.getID(), ImGui.getMousePosX(), ImGui.getMousePosY());
+      }
+
       ImGui.endDragDropTarget();
     }
 
@@ -378,12 +415,35 @@ public class NodeEditor {
     ImGui.end();
   }
 
+  public CustomNode addCustomNode(File path) {
+    System.out.printf("addCustomNode path=%s, parent=%s\n", path.getPath(), new File(lastSavePath).getParent());
+    CustomNode node = new CustomNode(schematic, path, new File(new File(lastSavePath).getParent()));
+    ImNodes.setNodeScreenSpacePos(node.getID(), 0.0f, 0.0f);
+
+    schematic.getNodes().put(node.getID(), node);
+
+    for (NodeAttribute a : node.getAttributes()) {
+      schematic.getGraph().addNode(a.getID());
+      schematic.getNodeAttributes().put(a.getID(), a);
+    }
+
+    return node;
+  }
+
   public String getLastSavePath() {
     return lastSavePath;
   }
 
+  public void setLastSavePath(String savePath) {
+    lastSavePath = savePath;
+  }
+
   public void optimizeIDs() {
     schematic.optimizeIDs();
+  }
+
+  public Schematic.Type getSchematicType() {
+    return schematic.getType();
   }
 
   private String lastSavePath = null;

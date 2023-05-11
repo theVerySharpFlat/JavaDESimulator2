@@ -84,8 +84,8 @@ public class Node {
     this.attributes = donor.attributes;
   }
 
+  // Not neccesarry, but you should override me!
   public void update() {}
-  ; // Not neccesarry, but you should override me!
 
   public boolean canBeUsedInSchematic(Schematic schematic) {
     return true;
@@ -97,7 +97,7 @@ public class Node {
 
   public void loadCustomData(HashMap<String, String> data) {}
 
-  private ArrayList<NodeAttribute> attributes;
-  private int id;
-  private String name;
+  protected ArrayList<NodeAttribute> attributes;
+  protected int id;
+  protected String name;
 }

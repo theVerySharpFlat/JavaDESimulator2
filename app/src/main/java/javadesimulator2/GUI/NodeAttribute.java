@@ -17,8 +17,16 @@ public class NodeAttribute {
     return ioType;
   }
 
+  public void setIOType(IO io) {
+    this.ioType = io;
+  }
+
   public String getTitle() {
     return title;
+  }
+
+  public void setTitle(String name) {
+    title = name;
   }
 
   public int getID() {
@@ -33,7 +41,7 @@ public class NodeAttribute {
     return parent;
   }
 
-  void setParentID(int id) {
+  public void setParentID(int id) {
     parent = id;
   }
 

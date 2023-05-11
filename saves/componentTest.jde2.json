@@ -1,0 +1,293 @@
+{
+  "schematic": {
+    "type": "COMPONENT",
+    "nodes": [
+      {
+        "ID": 48,
+        "name": "DIGIOUT-48",
+        "type": "DigiOutput",
+        "customData": "{\"name\":\"~Q\"}"
+      },
+      {
+        "ID": 1,
+        "name": "META-1",
+        "type": "Meta",
+        "customData": "{\"name\":\"D_FF\"}"
+      },
+      {
+        "ID": 17,
+        "name": "NAND_17",
+        "type": "CustomNode",
+        "path": "/Users/alambert29/Library/dev/JavaDESimulator2/saves/componentTest.jde2",
+        "customData": "{}"
+      },
+      {
+        "ID": 33,
+        "name": "NAND_33",
+        "type": "CustomNode",
+        "path": "/Users/alambert29/Library/dev/JavaDESimulator2/saves/componentTest.jde2",
+        "customData": "{}"
+      },
+      {
+        "ID": 3,
+        "name": "DIGIIN-3",
+        "type": "DigiInput",
+        "customData": "{\"name\":\"D\"}"
+      },
+      {
+        "ID": 6,
+        "name": "DIGIIN-6",
+        "type": "DigiInput",
+        "customData": "{\"name\":\"CLK\"}"
+      },
+      {
+        "ID": 22,
+        "name": "NOT-22",
+        "type": "Not",
+        "customData": "{}"
+      },
+      {
+        "ID": 42,
+        "name": "DIGIOUT-42",
+        "type": "DigiOutput",
+        "customData": "{\"name\":\"Q\"}"
+      },
+      {
+        "ID": 11,
+        "name": "NAND_11",
+        "type": "CustomNode",
+        "path": "/Users/alambert29/Library/dev/JavaDESimulator2/saves/componentTest.jde2",
+        "customData": "{}"
+      },
+      {
+        "ID": 28,
+        "name": "NAND_28",
+        "type": "CustomNode",
+        "path": "/Users/alambert29/Library/dev/JavaDESimulator2/saves/componentTest.jde2",
+        "customData": "{}"
+      }
+    ],
+    "nodeAttributes": [
+      {
+        "ID": 34,
+        "ioType": "O",
+        "title": "Y",
+        "parentID": 33
+      },
+      {
+        "ID": 35,
+        "ioType": "I",
+        "title": "A",
+        "parentID": 33
+      },
+      {
+        "ID": 4,
+        "ioType": "O",
+        "title": "Y",
+        "parentID": 3
+      },
+      {
+        "ID": 36,
+        "ioType": "I",
+        "title": "B",
+        "parentID": 33
+      },
+      {
+        "ID": 7,
+        "ioType": "O",
+        "title": "Y",
+        "parentID": 6
+      },
+      {
+        "ID": 43,
+        "ioType": "I",
+        "title": "Y",
+        "parentID": 42
+      },
+      {
+        "ID": 12,
+        "ioType": "O",
+        "title": "Y",
+        "parentID": 11
+      },
+      {
+        "ID": 13,
+        "ioType": "I",
+        "title": "A",
+        "parentID": 11
+      },
+      {
+        "ID": 14,
+        "ioType": "I",
+        "title": "B",
+        "parentID": 11
+      },
+      {
+        "ID": 49,
+        "ioType": "I",
+        "title": "Y",
+        "parentID": 48
+      },
+      {
+        "ID": 18,
+        "ioType": "O",
+        "title": "Y",
+        "parentID": 17
+      },
+      {
+        "ID": 19,
+        "ioType": "I",
+        "title": "A",
+        "parentID": 17
+      },
+      {
+        "ID": 20,
+        "ioType": "I",
+        "title": "B",
+        "parentID": 17
+      },
+      {
+        "ID": 23,
+        "ioType": "I",
+        "title": "A",
+        "parentID": 22
+      },
+      {
+        "ID": 24,
+        "ioType": "O",
+        "title": "Y",
+        "parentID": 22
+      },
+      {
+        "ID": 29,
+        "ioType": "O",
+        "title": "Y",
+        "parentID": 28
+      },
+      {
+        "ID": 30,
+        "ioType": "I",
+        "title": "A",
+        "parentID": 28
+      },
+      {
+        "ID": 31,
+        "ioType": "I",
+        "title": "B",
+        "parentID": 28
+      }
+    ],
+    "links": [
+      {
+        "ID": 15,
+        "U": 13,
+        "V": 4
+      },
+      {
+        "ID": 16,
+        "U": 14,
+        "V": 7
+      },
+      {
+        "ID": 26,
+        "U": 19,
+        "V": 24
+      },
+      {
+        "ID": 27,
+        "U": 20,
+        "V": 7
+      },
+      {
+        "ID": 25,
+        "U": 23,
+        "V": 4
+      },
+      {
+        "ID": 39,
+        "U": 30,
+        "V": 34
+      },
+      {
+        "ID": 32,
+        "U": 31,
+        "V": 18
+      },
+      {
+        "ID": 38,
+        "U": 35,
+        "V": 12
+      },
+      {
+        "ID": 40,
+        "U": 36,
+        "V": 29
+      },
+      {
+        "ID": 51,
+        "U": 43,
+        "V": 34
+      },
+      {
+        "ID": 50,
+        "U": 49,
+        "V": 29
+      }
+    ]
+  },
+  "editorState": {
+    "nextID": 54,
+    "nodePositions": [
+      {
+        "ID": 48,
+        "x": 973.62787,
+        "y": 308.02213
+      },
+      {
+        "ID": 1,
+        "x": 197,
+        "y": 52
+      },
+      {
+        "ID": 17,
+        "x": 612.95984,
+        "y": 292.94443
+      },
+      {
+        "ID": 33,
+        "x": 806.31604,
+        "y": 123.14224
+      },
+      {
+        "ID": 3,
+        "x": 197,
+        "y": 159
+      },
+      {
+        "ID": 6,
+        "x": 194,
+        "y": 315
+      },
+      {
+        "ID": 22,
+        "x": 445.96005,
+        "y": 241.94455
+      },
+      {
+        "ID": 42,
+        "x": 977.62787,
+        "y": 126.022125
+      },
+      {
+        "ID": 11,
+        "x": 617,
+        "y": 141
+      },
+      {
+        "ID": 28,
+        "x": 801.64844,
+        "y": 308.0647
+      }
+    ]
+  }
+}

@@ -11,8 +11,11 @@ import imgui.app.Configuration;
 import imgui.extension.imguifiledialog.ImGuiFileDialog;
 import imgui.extension.imguifiledialog.flag.ImGuiFileDialogFlags;
 import imgui.flag.ImGuiConfigFlags;
+
+import java.io.File;
 import java.util.Map;
 import javadesimulator2.GUI.*;
+import javadesimulator2.GUI.Schematic.Type;
 
 public class App extends Application {
   @Override
@@ -33,13 +36,17 @@ public class App extends Application {
     nodeEditor = new NodeEditor();
   }
 
-  public void openFileDialog(String id, String title) {
-    ImGuiFileDialog.openDialog(id, title, ".jde2", ".", "", 1, 0, ImGuiFileDialogFlags.None);
+  public void openFileDialog(String id, String title, String fileType) {
+    ImGuiFileDialog.openDialog(id, title, fileType, ".", "", 1, 0, ImGuiFileDialogFlags.None);
   }
 
   public void save() {
-    if (nodeEditor.getLastSavePath() == null) {
-      openFileDialog("browse-save", "Save As");
+    save(false);
+  }
+
+  public void save(boolean saveAs) {
+    if (saveAs || nodeEditor.getLastSavePath() == null) {
+      openFileDialog("browse-save", "Save As", nodeEditor.getSchematicType() == Type.ROOT ? ".jde2" : ".jde2c");
     } else {
       nodeEditor.serialize(nodeEditor.getLastSavePath());
     }
@@ -53,7 +60,7 @@ public class App extends Application {
     if (ImGui.beginMenu("File")) {
 
       if (ImGui.menuItem("save as")) {
-        openFileDialog("browse-save", "Save As");
+        save(true);
       }
 
       if (ImGui.menuItem("save")) {
@@ -61,21 +68,27 @@ public class App extends Application {
       }
 
       if (ImGui.menuItem("open")) {
-        openFileDialog("browse-open", "Open");
+        openFileDialog("browse-open", "Open", ".jde2,.jde2c");
       }
 
       if (ImGui.menuItem("new project")) {
         save();
         nodeEditor.newSchematic(Schematic.Type.ROOT);
+        nodeEditor.setLastSavePath(null);
       }
 
       if (ImGui.menuItem("new component")) {
         save();
         nodeEditor.newSchematic(Schematic.Type.COMPONENT);
+        nodeEditor.setLastSavePath(null);
       }
 
-      if(ImGui.menuItem("optimize IDs")) {
+      if (ImGui.menuItem("optimize IDs")) {
         nodeEditor.optimizeIDs();
+      }
+
+      if (ImGui.menuItem("add custom component")) {
+        openFileDialog("browse-custom", "Load Custom Node!", ".jde2c");
       }
 
       ImGui.endMenu();
@@ -92,8 +105,17 @@ public class App extends Application {
             && ImGuiFileDialog.getFilePathName().length() > 0) {
           String path = ImGuiFileDialog.getFilePathName();
           String extension = Files.getFileExtension(path);
-          if (!extension.equals("jde2")) {
-            path = path + ".jde2";
+
+          if (nodeEditor.getSchematicType() == Type.ROOT) {
+            if (!extension.equals("jde2")) {
+              System.out.println("path: " + path);
+              path = path + ".jde2";
+            }
+          } else {
+            if (!extension.equals("jde2c")) {
+              System.out.println("path: " + path);
+              path = path + ".jde2c";
+            }
           }
           nodeEditor.serialize(path);
         }
@@ -106,6 +128,16 @@ public class App extends Application {
         Map<String, String> filenames = ImGuiFileDialog.getSelection();
         if (filenames != null && filenames.size() > 0) {
           nodeEditor.load(filenames.values().stream().findFirst().get());
+        }
+      }
+      ImGuiFileDialog.close();
+    }
+
+    if (ImGuiFileDialog.display("browse-custom", ImGuiFileDialogFlags.None, 200, 400, 800, 600)) {
+      if (ImGuiFileDialog.isOk()) {
+        Map<String, String> filenames = ImGuiFileDialog.getSelection();
+        if (filenames != null && filenames.size() > 0) {
+          nodeEditor.addCustomNode(new File(filenames.values().stream().findFirst().get()));
         }
       }
       ImGuiFileDialog.close();
