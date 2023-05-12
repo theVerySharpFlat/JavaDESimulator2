@@ -3,8 +3,6 @@
  */
 package javadesimulator2;
 
-import com.google.common.io.Files;
-
 import imgui.*;
 import imgui.app.Application;
 import imgui.app.Configuration;
@@ -17,6 +15,9 @@ import imgui.flag.ImGuiStyleVar;
 
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.Map;
 import javadesimulator2.GUI.*;
 import javadesimulator2.GUI.Schematic.Type;
@@ -83,6 +84,14 @@ public class App extends Application {
     style.setFrameRounding(2.3f);
   }
 
+  private static byte[] loadFromResources(String name) {
+    try {
+      return java.nio.file.Files.readAllBytes(Paths.get(App.class.getResource(name).toURI()));
+    } catch (IOException | URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   @Override
   protected void initImGui(final Configuration config) {
     super.initImGui(config);
@@ -93,7 +102,7 @@ public class App extends Application {
     // io.setIniFilename(null);
     final ImFontConfig fontConfig = new ImFontConfig();
 
-    io.getFonts().addFontFromFileTTF("../resources/Roboto-Medium.ttf", 15.0f, fontConfig);
+    io.getFonts().addFontFromMemoryTTF(loadFromResources("/Roboto-Medium.ttf"), 15.0f, fontConfig);
     io.getFonts().build();
     setImGuiStyle();
 
@@ -166,7 +175,7 @@ public class App extends Application {
         if (ImGuiFileDialog.getFilePathName() != null
             && ImGuiFileDialog.getFilePathName().length() > 0) {
           String path = ImGuiFileDialog.getFilePathName();
-          String extension = Files.getFileExtension(path);
+          String extension = com.google.common.io.Files.getFileExtension(path);
 
           if (nodeEditor.getSchematicType() == Type.ROOT) {
             if (!extension.equals("jde2")) {
