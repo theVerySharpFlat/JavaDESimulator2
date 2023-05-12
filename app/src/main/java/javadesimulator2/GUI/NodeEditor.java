@@ -90,7 +90,7 @@ public class NodeEditor {
     if (!shouldShow)
       return;
 
-    ImGui.begin("Sidebar");
+    ImGui.begin("Digital Electronics");
 
     float width = ImGui.getWindowWidth();
 
@@ -101,7 +101,7 @@ public class NodeEditor {
 
       String name = ctor.getDeclaringClass().getSimpleName().toUpperCase();
       ImGui.pushID(name + "-BTN");
-      ImGui.button(name, width - 10.0f, 50.0f);
+      ImGui.button(name, width - 10.0f, 25.0f);
       if (ImGui.beginDragDropSource()) {
         ImGui.setDragDropPayload("NEW-COMPONENT", ctor);
         ImGui.button(name, width, 50.0f);
@@ -266,15 +266,15 @@ public class NodeEditor {
       simulate();
     }
 
-    ImGui.showDemoWindow();
     if (!shouldShow) {
       return;
     }
-
-    ImGui.begin("Node Editor");
+    //ImGui.showDemoWindow();
+    ImGui.begin("Schematic View");
     if (schematic.getType() == Schematic.Type.ROOT) {
-      ImGui.setCursorPosX(ImGui.getWindowSizeX() / 2.0f - ImGui.calcTextSize("play").x);
-      if (ImGui.button(simulating ? "stop" : "play")) {
+
+      ImGui.setCursorPosX(ImGui.getWindowSizeX() / 2.0f - ImGui.calcTextSize("PLAY").x);
+      if (ImGui.button(simulating ? "STOP" : "PLAY")) {
         simulating = !simulating;
       }
     }
