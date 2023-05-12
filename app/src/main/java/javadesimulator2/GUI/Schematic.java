@@ -395,6 +395,12 @@ public class Schematic implements Serializable {
         NodeAttribute srcAttribute = getNodeAttributes().get(src);
         NodeAttribute dstAttribute = getNodeAttributes().get(dst);
 
+        Node srcNode = nodes.get(srcAttribute.getParentID());
+        Node dstNode = nodes.get(dstAttribute.getParentID());
+
+        srcNode.update();
+        dstNode.update();
+
         srcAttribute.setState(dstAttribute.getState());
 
         for (Node node : getNodes().values()) {

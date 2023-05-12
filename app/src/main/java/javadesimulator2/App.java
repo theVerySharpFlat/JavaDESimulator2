@@ -99,9 +99,7 @@ public class App extends Application {
     if (ImGuiFileDialog.display("browse-save", ImGuiFileDialogFlags.None, 200, 400, 800, 600)) {
       if (ImGuiFileDialog.isOk()) {
         Map<String, String> filenames = ImGuiFileDialog.getSelection();
-        if (filenames != null && filenames.size() > 0) {
-          nodeEditor.serialize(filenames.values().stream().findFirst().get());
-        } else if (ImGuiFileDialog.getFilePathName() != null
+        if (ImGuiFileDialog.getFilePathName() != null
             && ImGuiFileDialog.getFilePathName().length() > 0) {
           String path = ImGuiFileDialog.getFilePathName();
           String extension = Files.getFileExtension(path);
@@ -118,8 +116,11 @@ public class App extends Application {
             }
           }
           nodeEditor.serialize(path);
+        } else if (filenames != null && filenames.size() > 0) {
+          nodeEditor.serialize(filenames.values().stream().findFirst().get());
         }
       }
+
       ImGuiFileDialog.close();
     }
 

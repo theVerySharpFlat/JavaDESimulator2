@@ -243,6 +243,7 @@ public class NodeEditor {
   public void show(boolean shouldShow) {
     ImGui.begin("Nodes");
     ImGui.text("Next ID " + schematic.getCurrentNextID());
+    ImGui.text("Save Path: " + lastSavePath);
     for (Node node : schematic.getNodes().values()) {
       ImGui.text("Node " + node.getID());
     }
