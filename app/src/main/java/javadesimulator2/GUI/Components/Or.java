@@ -21,15 +21,22 @@ public class Or extends Node {
     int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, getID()));
 
-    a = super.getAttributes().get(0);
-    b = super.getAttributes().get(1);
-    y = super.getAttributes().get(2);
   }
 
   @Override
   public void update() {
-    y.setState(a.getState() || b.getState());
+    y().setState(a().getState() || b().getState());
   }
 
-  NodeAttribute a, b, y;
+  private NodeAttribute a() {
+    return super.getAttributes().get(0);
+  }
+
+  private NodeAttribute b() {
+    return super.getAttributes().get(1);
+  }
+
+  private NodeAttribute y() {
+    return super.getAttributes().get(2);
+  }
 }

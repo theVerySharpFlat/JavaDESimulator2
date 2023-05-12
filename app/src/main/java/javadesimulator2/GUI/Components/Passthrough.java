@@ -18,14 +18,18 @@ public class Passthrough extends Node {
     int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, getID()));
 
-    a = super.getAttributes().get(0);
-    y = super.getAttributes().get(1);
   }
 
   @Override
   public void update() {
-    y.setState(a.getState());
+    y().setState(a().getState());
   }
 
-  NodeAttribute a, y;
+  private NodeAttribute a() {
+    return super.getAttributes().get(0);
+  }
+
+  private NodeAttribute y() {
+    return super.getAttributes().get(1);
+  }
 }

@@ -13,7 +13,9 @@ import com.google.common.graph.ValueGraphBuilder;
 
 import imgui.ImVec2;
 import imgui.extension.imnodes.ImNodes;
+import javadesimulator2.GUI.Components.CustomNode;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -82,6 +84,10 @@ public class Schematic implements Serializable {
       generator.writeStringField("name", node.getName());
       generator.writeStringField("type", node.getClass().getSimpleName());
 
+      if (node.getClass().equals(CustomNode.class)) {
+        generator.writeStringField("path", ((CustomNode) node).getPath().getPath());
+      }
+
       generator.writeFieldName("customData");
       generator.writeString(mapper.writeValueAsString(node.getCustomData()));
 
@@ -113,7 +119,7 @@ public class Schematic implements Serializable {
     generator.writeEndArray();
   }
 
-  public void load(JsonNode root) {
+  public void load(JsonNode root, File parent) {
     HashMap<Integer, ArrayList<NodeAttribute>> nodeToAttributesMap = new HashMap<>();
 
     type = Type.valueOf(root.path("type").asText("ROOT"));
@@ -171,15 +177,15 @@ public class Schematic implements Serializable {
           return;
         }
 
-        String name, type;
+        String name, type, path;
         name = node.get("name").asText("");
         type = node.get("type").asText("");
+        path = node.path("path").asText(""); // Only for custom nodes
 
         if (name.length() == 0 || type.length() == 0) {
           System.out.println("Failed to load name or type on node!");
           return;
         }
-
         Constructor<? extends Node> foundCtor = null;
         for (Constructor<? extends Node> ctor : NodeEditor.nodeCtors) {
           if (ctor.getDeclaringClass().getSimpleName().equals(type)) {
@@ -187,13 +193,13 @@ public class Schematic implements Serializable {
           }
         }
 
-        if (foundCtor == null) {
+        if (!type.equals("CustomNode") && foundCtor == null) {
           System.out.println("Failed to find suitable constructor!");
           return;
         }
 
         if (!nodeToAttributesMap.containsKey(id)) {
-          System.out.println("Warning: failed to find attributes that match node!");
+          System.out.println("Warning: failed to find attributes that match node!" + "id=" + id);
           // return;
         }
 
@@ -212,19 +218,30 @@ public class Schematic implements Serializable {
 
         Node donor = new Node(id, name, nodeToAttributesMap.getOrDefault(id, new ArrayList<>()));
 
-        try {
-          Node newNode = foundCtor.newInstance(this);
-          newNode.matchDonor(donor);
-          if (customDataMap != null) {
-            newNode.loadCustomData(customDataMap);
+        if (!type.equals("CustomNode")) {
+          try {
+            Node newNode = foundCtor.newInstance(this);
+            newNode.matchDonor(donor);
+            if (customDataMap != null) {
+              newNode.loadCustomData(customDataMap);
+            }
+
+            nodes.put(newNode.getID(), newNode);
+          } catch (InstantiationException
+              | IllegalAccessException
+              | IllegalArgumentException
+              | InvocationTargetException e) {
+            e.printStackTrace();
+          }
+        } else {
+          if (path.length() == 0) {
+            System.out.println("Failed to retrieve path!");
+            continue;
           }
 
+          CustomNode newNode = new CustomNode(this, new File(path), parent);
+          newNode.matchDonor(donor);
           nodes.put(newNode.getID(), newNode);
-        } catch (InstantiationException
-            | IllegalAccessException
-            | IllegalArgumentException
-            | InvocationTargetException e) {
-          e.printStackTrace();
         }
       }
     } else {
@@ -255,6 +272,11 @@ public class Schematic implements Serializable {
   }
 
   public void optimizeIDs() {
+    optimizeIDs(0, false);
+  }
+
+  public void optimizeIDs(int baseID, boolean virtualSchematic) {
+    System.out.println("right here");
     ArrayList<Integer> ids = new ArrayList<>();
 
     for (Node node : nodes.values()) {
@@ -270,10 +292,12 @@ public class Schematic implements Serializable {
     }
 
     // ids.sort(Comparator.naturalOrder());
+    //
+    System.out.println("riiight here");
 
     HashMap<Integer, Integer> oldIDToNewIDMap = new HashMap<>();
     for (int i = 0; i < ids.size(); i++) {
-      oldIDToNewIDMap.put(ids.get(i), i);
+      oldIDToNewIDMap.put(ids.get(i), i + baseID);
     }
 
     HashMap<Integer, Node> newNodeMap = new HashMap<>();
@@ -285,8 +309,12 @@ public class Schematic implements Serializable {
       Node node = nodes.get(oldID);
       int newID = oldIDToNewIDMap.getOrDefault(oldID, -1);
 
+      if (oldID == -1)
+        System.out.println("oldID: " + oldID);
+
       newNodeToPositionMap.put(newID,
-          new ImVec2(ImNodes.getNodeGridSpacePosX(oldID), ImNodes.getNodeGridSpacePosY(oldID)));
+          virtualSchematic ? new ImVec2(0.0f, 0.0f)
+              : new ImVec2(ImNodes.getNodeGridSpacePosX(oldID), ImNodes.getNodeGridSpacePosY(oldID)));
 
       if (newID == -1) {
         System.out.println("error: newID == -1");
@@ -305,9 +333,9 @@ public class Schematic implements Serializable {
       for (Integer oldAttributeID : nodeAttributes.keySet()) {
         NodeAttribute attribute = nodeAttributes.get(oldAttributeID);
 
-        int newAttributeID = oldIDToNewIDMap.getOrDefault(oldAttributeID, -1);
+        int newAttributeID = oldIDToNewIDMap.getOrDefault(oldAttributeID, -1) + baseID;
 
-        if (newAttributeID == -1) {
+        if (newAttributeID == -1 + baseID) {
           System.out.println("error: newAttributeID == -1");
           continue;
         }
@@ -345,15 +373,41 @@ public class Schematic implements Serializable {
     nodes = newNodeMap;
     nodeAttributes = newNodeAttributeMap;
 
-    for(Node node : nodes.values()) {
+    for (Node node : nodes.values()) {
       ImVec2 pos = newNodeToPositionMap.getOrDefault(node.getID(), new ImVec2(0.0f, 0.0f));
       ImNodes.setNodeGridSpacePos(node.getID(), pos.x, pos.y);
     }
 
-    nextID = ids.size();
+    nextID = ids.size() + baseID;
+    System.out.println("end");
   }
 
   public void setNextID(int id) {
     nextID = id;
+  }
+
+  public void simulate() {
+    for (int i = 0; i < 1; i++) {
+      for (EndpointPair<Integer> edge : getGraph().edges()) {
+        int src = edge.nodeU();
+        int dst = edge.nodeV();
+
+        NodeAttribute srcAttribute = getNodeAttributes().get(src);
+        NodeAttribute dstAttribute = getNodeAttributes().get(dst);
+
+        Node srcNode = nodes.get(srcAttribute.getParentID());
+        Node dstNode = nodes.get(dstAttribute.getParentID());
+
+        srcNode.update();
+        dstNode.update();
+
+        srcAttribute.setState(dstAttribute.getState());
+
+        for (Node node : getNodes().values()) {
+          node.update();
+        }
+      }
+
+    }
   }
 }

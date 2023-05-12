@@ -21,7 +21,8 @@ public class LED extends Node {
 
   public void styleAfter() {
     ImGui.sameLine();
-    ImGui.text(super.getAttributes().get(0).getState() ? "ON" : "OFF");
+    ImGui.pushItemWidth(ImGui.calcTextSize("OFF").x);
+    ImGui.text(super.getAttributes().get(0).getState() ? "ON " : "OFF");
   }
 
   @Override
