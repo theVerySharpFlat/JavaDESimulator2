@@ -16,13 +16,13 @@ public class DigiOutput extends Node {
     super(
         schematic.getCurrentNextID(),
         "DIGIOUT-" + schematic.getNextID(),
-        new ArrayList<NodeAttribute>());
+        new ArrayList<>());
 
     int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "Y", idY, getID()));
   }
 
-  ImString name = new ImString(10);
+  final ImString name = new ImString(10);
 
   @Override
   protected void renderAttributeContents(NodeAttribute a) {
@@ -33,11 +33,6 @@ public class DigiOutput extends Node {
   protected void renderNodeBottomContents() {
     ImGui.pushItemWidth(ImGui.calcTextSize("c".repeat(name.getBufferSize())).x);
     ImGui.inputText("name", name);
-  }
-
-  @Override
-  public void update() {
-    // N/A
   }
 
   @Override

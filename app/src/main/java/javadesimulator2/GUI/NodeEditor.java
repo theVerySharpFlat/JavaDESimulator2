@@ -17,6 +17,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 import javadesimulator2.GUI.Components.CustomNode;
 import org.reflections.Reflections;
@@ -113,22 +114,24 @@ public class NodeEditor {
           new File(new File(lastSavePath).getParent())
               .listFiles((dir, name) -> name.endsWith("jde2c"));
 
-      for (int i = 0; i < componentFiles.length; i++) {
-        // remove abs path
-        componentFiles[i] =
+      if(componentFiles != null) {
+        for (int i = 0; i < componentFiles.length; i++) {
+          // remove abs path
+          componentFiles[i] =
             new File(componentFiles[i].getPath().replace((new File(lastSavePath).getParent()), ""));
-      }
-
-      for (File file : componentFiles) {
-        ImGui.pushID(file.getName() + "-BTN");
-        ImGui.button(file.getName(), width - 10.0f, 50.0f);
-        if (ImGui.beginDragDropSource()) {
-          ImGui.setDragDropPayload("NEW-CUSTOM-COMPONENT", file.getPath());
-          System.out.println(file.getPath());
-          ImGui.button(file.getName(), width, 50.0f);
-          ImGui.endDragDropSource();
         }
-        ImGui.popID();
+
+        for (File file : componentFiles) {
+          ImGui.pushID(file.getName() + "-BTN");
+          ImGui.button(file.getName(), width - 10.0f, 50.0f);
+          if (ImGui.beginDragDropSource()) {
+            ImGui.setDragDropPayload("NEW-CUSTOM-COMPONENT", file.getPath());
+            System.out.println(file.getPath());
+            ImGui.button(file.getName(), width, 50.0f);
+            ImGui.endDragDropSource();
+          }
+          ImGui.popID();
+        }
       }
     }
 
@@ -258,7 +261,8 @@ public class NodeEditor {
 
     ImGui.begin("edges");
     for (EndpointPair<Integer> edge : schematic.getGraph().edges()) {
-      ImGui.text("Edge value: " + schematic.getGraph().edgeValue(edge.nodeU(), edge.nodeV()).get());
+      Optional<Integer> edgeVal = schematic.getGraph().edgeValue(edge.nodeU(), edge.nodeV());
+      edgeVal.ifPresent(integer -> ImGui.text("Edge value: " + integer));
     }
     ImGui.end();
 
@@ -286,9 +290,7 @@ public class NodeEditor {
 
     for (EndpointPair<Integer> edge : schematic.getGraph().edges()) {
       java.util.Optional<Integer> edgeValue = schematic.getGraph().edgeValue(edge);
-      if (edgeValue.isPresent()) {
-        ImNodes.link(edgeValue.get(), edge.nodeU(), edge.nodeV());
-      }
+      edgeValue.ifPresent(integer -> ImNodes.link(integer, edge.nodeU(), edge.nodeV()));
     }
 
     for (Node node : schematic.getNodes().values()) {
@@ -419,8 +421,6 @@ public class NodeEditor {
   }
 
   public CustomNode addCustomNode(File path) {
-    //    System.out.printf("addCustomNode path=%s, parent=%s\n", path.getPath(), new
-    // File(lastSavePath).getParent());
     CustomNode node = new CustomNode(schematic, path, new File(new File(lastSavePath).getParent()));
     ImNodes.setNodeScreenSpacePos(node.getID(), 0.0f, 0.0f);
 

@@ -10,7 +10,7 @@ public class Or extends Node {
     super(
         schematic.getCurrentNextID(),
         "OR-" + schematic.getNextID(),
-        new ArrayList<NodeAttribute>());
+        new ArrayList<>());
 
     int idA = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "A", idA, getID()));

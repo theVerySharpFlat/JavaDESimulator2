@@ -16,10 +16,10 @@ public class Meta extends Node {
     super(
         schematic.getCurrentNextID(),
         "META-" + schematic.getNextID(),
-        new ArrayList<NodeAttribute>());
+        new ArrayList<>());
   }
 
-  ImString name = new ImString(10);
+  final ImString name = new ImString(10);
 
   @Override
   protected void renderAttributeContents(NodeAttribute a) {
@@ -30,11 +30,6 @@ public class Meta extends Node {
   protected void renderNodeBottomContents() {
     ImGui.pushItemWidth(ImGui.calcTextSize("c".repeat(name.getBufferSize())).x);
     ImGui.inputText("name", name);
-  }
-
-  @Override
-  public void update() {
-    // N/A
   }
 
   @Override

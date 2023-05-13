@@ -83,7 +83,7 @@ public class App extends Application {
   private static byte[] loadFromResources(String name) {
     try {
       return java.nio.file.Files.readAllBytes(Paths.get(App.class.getResource(name).toURI()));
-    } catch (IOException | URISyntaxException e) {
+    } catch (IOException | URISyntaxException | NullPointerException e) {
       throw new RuntimeException(e);
     }
   }

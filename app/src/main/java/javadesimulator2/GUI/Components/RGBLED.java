@@ -15,7 +15,7 @@ public class RGBLED extends Node {
     super(
         schematic.getCurrentNextID(),
         "RGBLED-" + schematic.getNextID(),
-        new ArrayList<NodeAttribute>());
+        new ArrayList<>());
 
     super.getAttributes()
         .add(new NodeAttribute(NodeAttribute.IO.I, "R", schematic.getNextID(), getID()));
@@ -72,19 +72,10 @@ public class RGBLED extends Node {
             ImDrawFlags.None);
   }
 
-  public void styleBefore() {}
-
-  public void styleAfter() {}
-
   @Override
   protected void renderAttributeContents(NodeAttribute a) {
-    styleBefore();
     super.renderAttributeContents(a);
-    styleAfter();
   }
-
-  @Override
-  public void update() {}
 
   @Override
   protected void matchDonor(Node donor) {

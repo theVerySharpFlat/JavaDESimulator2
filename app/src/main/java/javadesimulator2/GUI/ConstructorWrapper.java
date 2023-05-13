@@ -11,5 +11,5 @@ public class ConstructorWrapper<T> {
     return ctor.get();
   }
 
-  Supplier<T> ctor;
+  final Supplier<T> ctor;
 }

@@ -1,7 +1,6 @@
 package javadesimulator2.GUI;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.google.common.graph.EndpointPair;
@@ -21,7 +20,7 @@ public class NodeGraphSerializer extends StdSerializer<ValueGraph<Integer, Integ
   @Override
   public void serialize(
       ValueGraph<Integer, Integer> value, JsonGenerator gen, SerializerProvider provider)
-      throws IOException, JsonProcessingException {
+      throws IOException {
 
     gen.writeStartObject();
 

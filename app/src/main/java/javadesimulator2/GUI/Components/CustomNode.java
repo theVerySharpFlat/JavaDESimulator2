@@ -13,7 +13,7 @@ import javadesimulator2.GUI.Schematic;
 
 public class CustomNode extends Node {
   public CustomNode(Schematic schematic, File path, File root) {
-    super(schematic.getNextID(), "UNTITLED", new ArrayList<NodeAttribute>());
+    super(schematic.getNextID(), "UNTITLED", new ArrayList<>());
     this.path = path;
 
     //    System.out.printf("path=%s, root=%s\n", path.getPath(), root.getPath());
@@ -193,11 +193,11 @@ public class CustomNode extends Node {
     }
   }
 
-  HashMap<NodeAttribute, NodeAttribute> parentToComponentInputAttributeMap = new HashMap<>();
-  HashMap<NodeAttribute, NodeAttribute> parentToComponentOutputAttributeMap = new HashMap<>();
+  final HashMap<NodeAttribute, NodeAttribute> parentToComponentInputAttributeMap = new HashMap<>();
+  final HashMap<NodeAttribute, NodeAttribute> parentToComponentOutputAttributeMap = new HashMap<>();
 
   Schematic componentSchematic;
-  File path;
+  final File path;
   Meta meta;
 
   Schematic parent;

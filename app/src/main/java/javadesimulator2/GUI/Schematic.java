@@ -108,7 +108,10 @@ public class Schematic implements Serializable {
     generator.writeStartArray();
     for (EndpointPair<Integer> edge : graph.edges()) {
       generator.writeStartObject();
-      generator.writeNumberField("ID", graph.edgeValue(edge).get());
+      if(graph.edgeValue(edge).isPresent()) {
+        generator.writeNumberField("ID", graph.edgeValue(edge).get());
+      }
+
       generator.writeNumberField("U", edge.nodeU());
       generator.writeNumberField("V", edge.nodeV());
       generator.writeEndObject();
@@ -207,7 +210,8 @@ public class Schematic implements Serializable {
           try {
             customDataMap =
                 mapper.readValue(
-                    customDataNode.asText(), new TypeReference<HashMap<String, String>>() {});
+                    customDataNode.asText(), new TypeReference<>() {
+                  });
           } catch (JsonProcessingException e) {
             e.printStackTrace();
           }
@@ -289,7 +293,9 @@ public class Schematic implements Serializable {
     }
 
     for (EndpointPair<Integer> edge : graph.edges()) {
-      ids.add(graph.edgeValue(edge).get());
+      if(graph.edgeValue(edge).isPresent()) {
+        ids.add(graph.edgeValue(edge).get());
+      }
     }
 
     // ids.sort(Comparator.naturalOrder());
@@ -366,8 +372,10 @@ public class Schematic implements Serializable {
         continue;
       }
 
-      newGraph.putEdgeValue(
+      if(graph.edgeValue(oldEdge).isPresent()) {
+        newGraph.putEdgeValue(
           newU, newV, oldIDToNewIDMap.getOrDefault(graph.edgeValue(oldEdge).get(), -1));
+      }
     }
 
     for (NodeAttribute attribute : newNodeAttributeMap.values()) {
@@ -450,10 +458,6 @@ public class Schematic implements Serializable {
 
         srcAttribute.setState(dstAttribute.getState());
       }
-      /*for (Node node : getNodes().values()) {
-        node.update();
-      }*/
-
     }
   }
 }

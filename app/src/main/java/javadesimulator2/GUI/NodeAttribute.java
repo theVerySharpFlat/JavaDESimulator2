@@ -57,7 +57,7 @@ public class NodeAttribute {
   private String title;
   private int id;
 
-  private int parent = Integer.MIN_VALUE;
+  private int parent;
 
   boolean state = false;
 }

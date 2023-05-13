@@ -14,13 +14,13 @@ public class DigiConst extends Node {
     super(
         schematic.getCurrentNextID(),
         "DIGICONST-" + schematic.getNextID(),
-        new ArrayList<NodeAttribute>());
+        new ArrayList<>());
 
     int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, getID()));
   }
 
-  ImBoolean boxState = new ImBoolean(false);
+  final ImBoolean boxState = new ImBoolean(false);
 
   public void outputShowMod() {
     ImGui.checkbox("##Checkbox", boxState);
@@ -59,6 +59,6 @@ public class DigiConst extends Node {
   @Override
   public void loadCustomData(HashMap<String, String> data) {
     String strState = data.getOrDefault("state", "false");
-    boxState.set(Boolean.valueOf(strState));
+    boxState.set(Boolean.parseBoolean(strState));
   }
 }

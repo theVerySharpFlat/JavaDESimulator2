@@ -11,13 +11,11 @@ public class LED extends Node {
     super(
         schematic.getCurrentNextID(),
         "LED-" + schematic.getNextID(),
-        new ArrayList<NodeAttribute>());
+        new ArrayList<>());
 
     int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "I", idY, getID()));
   }
-
-  public void styleBefore() {}
 
   public void styleAfter() {
     ImGui.sameLine();
@@ -27,13 +25,9 @@ public class LED extends Node {
 
   @Override
   protected void renderAttributeContents(NodeAttribute a) {
-    styleBefore();
     super.renderAttributeContents(a);
     styleAfter();
   }
-
-  @Override
-  public void update() {}
 
   @Override
   protected void matchDonor(Node donor) {
