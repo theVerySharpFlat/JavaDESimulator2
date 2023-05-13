@@ -2,7 +2,6 @@ package javadesimulator2.GUI;
 
 import imgui.ImGui;
 import imgui.extension.imnodes.ImNodes;
-import imgui.extension.imnodes.ImNodesStyle;
 import imgui.extension.imnodes.flag.ImNodesColorStyle;
 import imgui.extension.imnodes.flag.ImNodesPinShape;
 import java.util.ArrayList;
@@ -52,16 +51,27 @@ public class Node {
 
   public void show() {
     ImNodes.beginNode(getID());
-    ImNodes.pushColorStyle(ImNodesColorStyle.TitleBar, ImGui.colorConvertFloat4ToU32(0.38f, 0.38f, 0.38f, 1));
-    ImNodes.pushColorStyle(ImNodesColorStyle.TitleBarHovered, ImGui.colorConvertFloat4ToU32(0.45f, 0.45f, 0.45f, 1));
-    ImNodes.pushColorStyle(ImNodesColorStyle.TitleBarSelected, ImGui.colorConvertFloat4ToU32(0.45f, 0.45f, 0.45f, 1));
-    ImNodes.pushColorStyle(ImNodesColorStyle.Pin, ImGui.colorConvertFloat4ToU32(0.45f, 0.45f, 0.45f, 1));
-    ImNodes.pushColorStyle(ImNodesColorStyle.PinHovered, ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.55f, 1));
-    ImNodes.pushColorStyle(ImNodesColorStyle.Link, ImGui.colorConvertFloat4ToU32(0.38f, 0.38f, 0.38f, 1));
-    ImNodes.pushColorStyle(ImNodesColorStyle.LinkSelected, ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.55f, 1));
-    ImNodes.pushColorStyle(ImNodesColorStyle.LinkHovered, ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.55f, 1));
-    ImNodes.pushColorStyle(ImNodesColorStyle.MiniMapLink, ImGui.colorConvertFloat4ToU32(0.38f, 0.38f, 0.38f, 1));
-    ImNodes.pushColorStyle(ImNodesColorStyle.MiniMapLinkSelected, ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.55f, 1));
+    ImNodes.pushColorStyle(
+        ImNodesColorStyle.TitleBar, ImGui.colorConvertFloat4ToU32(0.38f, 0.38f, 0.38f, 1));
+    ImNodes.pushColorStyle(
+        ImNodesColorStyle.TitleBarHovered, ImGui.colorConvertFloat4ToU32(0.45f, 0.45f, 0.45f, 1));
+    ImNodes.pushColorStyle(
+        ImNodesColorStyle.TitleBarSelected, ImGui.colorConvertFloat4ToU32(0.45f, 0.45f, 0.45f, 1));
+    ImNodes.pushColorStyle(
+        ImNodesColorStyle.Pin, ImGui.colorConvertFloat4ToU32(0.45f, 0.45f, 0.45f, 1));
+    ImNodes.pushColorStyle(
+        ImNodesColorStyle.PinHovered, ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.55f, 1));
+    ImNodes.pushColorStyle(
+        ImNodesColorStyle.Link, ImGui.colorConvertFloat4ToU32(0.38f, 0.38f, 0.38f, 1));
+    ImNodes.pushColorStyle(
+        ImNodesColorStyle.LinkSelected, ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.55f, 1));
+    ImNodes.pushColorStyle(
+        ImNodesColorStyle.LinkHovered, ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.55f, 1));
+    ImNodes.pushColorStyle(
+        ImNodesColorStyle.MiniMapLink, ImGui.colorConvertFloat4ToU32(0.38f, 0.38f, 0.38f, 1));
+    ImNodes.pushColorStyle(
+        ImNodesColorStyle.MiniMapLinkSelected,
+        ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.55f, 1));
     ImNodes.getStyle().setNodeCornerRounding(0.0f);
     ImNodes.beginNodeTitleBar();
     ImGui.text(getName());

@@ -9,11 +9,7 @@ import imgui.app.Configuration;
 import imgui.extension.imguifiledialog.ImGuiFileDialog;
 import imgui.extension.imguifiledialog.flag.ImGuiFileDialogFlags;
 import imgui.flag.ImGuiCol;
-import imgui.flag.ImGuiColorEditFlags;
 import imgui.flag.ImGuiConfigFlags;
-import imgui.flag.ImGuiStyleVar;
-
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -119,7 +115,10 @@ public class App extends Application {
 
   public void save(boolean saveAs) {
     if (saveAs || nodeEditor.getLastSavePath() == null) {
-      openFileDialog("browse-save", "Save As", nodeEditor.getSchematicType() == Type.ROOT ? ".jde2" : ".jde2c");
+      openFileDialog(
+          "browse-save",
+          "Save As",
+          nodeEditor.getSchematicType() == Type.ROOT ? ".jde2" : ".jde2c");
     } else {
       nodeEditor.serialize(nodeEditor.getLastSavePath());
     }

@@ -20,7 +20,6 @@ public class And extends Node {
 
     int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, getID()));
-
   }
 
   @Override

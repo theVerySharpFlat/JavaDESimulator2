@@ -10,22 +10,18 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
-
 import imgui.ImVec2;
 import imgui.extension.imnodes.ImNodes;
-import javadesimulator2.GUI.Components.CustomNode;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
+import javadesimulator2.GUI.Components.CustomNode;
 
 public class Schematic implements Serializable {
   private HashMap<Integer, Node> nodes = new HashMap<>();
@@ -34,7 +30,8 @@ public class Schematic implements Serializable {
   private int nextID = 0;
 
   @JsonSerialize(using = NodeGraphSerializer.class)
-  private MutableValueGraph<Integer, Integer> graph = ValueGraphBuilder.directed().allowsSelfLoops(false).build();
+  private MutableValueGraph<Integer, Integer> graph =
+      ValueGraphBuilder.directed().allowsSelfLoops(false).build();
 
   public enum Type {
     ROOT,
@@ -208,9 +205,9 @@ public class Schematic implements Serializable {
         JsonNode customDataNode = node.path("customData");
         if (!customDataNode.isMissingNode()) {
           try {
-            customDataMap = mapper.readValue(
-                customDataNode.asText(), new TypeReference<HashMap<String, String>>() {
-                });
+            customDataMap =
+                mapper.readValue(
+                    customDataNode.asText(), new TypeReference<HashMap<String, String>>() {});
           } catch (JsonProcessingException e) {
             e.printStackTrace();
           }
@@ -248,7 +245,7 @@ public class Schematic implements Serializable {
       System.out.println("Failed to get nodes node!");
     }
 
-    for(NodeAttribute nodeAttribute : nodeAttributes.values()) {
+    for (NodeAttribute nodeAttribute : nodeAttributes.values()) {
       graph.addNode(nodeAttribute.getID());
     }
 
@@ -313,12 +310,14 @@ public class Schematic implements Serializable {
       Node node = nodes.get(oldID);
       int newID = oldIDToNewIDMap.getOrDefault(oldID, -1);
 
-      if (oldID == -1)
-        System.out.println("oldID: " + oldID);
+      if (oldID == -1) System.out.println("oldID: " + oldID);
 
-      newNodeToPositionMap.put(newID,
-          virtualSchematic ? new ImVec2(0.0f, 0.0f)
-              : new ImVec2(ImNodes.getNodeGridSpacePosX(oldID), ImNodes.getNodeGridSpacePosY(oldID)));
+      newNodeToPositionMap.put(
+          newID,
+          virtualSchematic
+              ? new ImVec2(0.0f, 0.0f)
+              : new ImVec2(
+                  ImNodes.getNodeGridSpacePosX(oldID), ImNodes.getNodeGridSpacePosY(oldID)));
 
       if (newID == -1) {
         System.out.println("error: newID == -1");
@@ -353,7 +352,8 @@ public class Schematic implements Serializable {
       newNodeMap.put(newID, node);
     }
 
-    MutableValueGraph<Integer, Integer> newGraph = ValueGraphBuilder.directed().allowsSelfLoops(false).build();
+    MutableValueGraph<Integer, Integer> newGraph =
+        ValueGraphBuilder.directed().allowsSelfLoops(false).build();
     for (EndpointPair<Integer> oldEdge : graph.edges()) {
       int oldU = oldEdge.nodeU();
       int oldV = oldEdge.nodeV();
@@ -366,7 +366,8 @@ public class Schematic implements Serializable {
         continue;
       }
 
-      newGraph.putEdgeValue(newU, newV, oldIDToNewIDMap.getOrDefault(graph.edgeValue(oldEdge).get(), -1));
+      newGraph.putEdgeValue(
+          newU, newV, oldIDToNewIDMap.getOrDefault(graph.edgeValue(oldEdge).get(), -1));
     }
 
     for (NodeAttribute attribute : newNodeAttributeMap.values()) {
@@ -393,29 +394,29 @@ public class Schematic implements Serializable {
   private void simulateNode(Node node, Node dependent, HashMap<Node, Boolean> updateResolutionMap) {
     // Acquire values for attribute states
     HashSet<Node> dependencies = new HashSet<>();
-    for(NodeAttribute attribute : node.getAttributes()) {
-      if(attribute.getIOType() != NodeAttribute.IO.I) {
+    for (NodeAttribute attribute : node.getAttributes()) {
+      if (attribute.getIOType() != NodeAttribute.IO.I) {
         continue;
       }
 
-      for(EndpointPair<Integer> con : graph.incidentEdges(attribute.getID())) {
-        if(con.nodeV() != attribute.getID()) {
+      for (EndpointPair<Integer> con : graph.incidentEdges(attribute.getID())) {
+        if (con.nodeV() != attribute.getID()) {
           break;
         }
 
         NodeAttribute dependencyAttribute = nodeAttributes.getOrDefault(con.nodeU(), null);
 
-        if(dependencyAttribute != null) {
+        if (dependencyAttribute != null) {
           Node dependencyParent = nodes.getOrDefault(dependencyAttribute.getParentID(), null);
-          if(dependencyParent != null && dependent != dependencyParent) {
+          if (dependencyParent != null && dependent != dependencyParent) {
             dependencies.add(dependencyParent);
           }
         }
       }
     }
 
-    for(Node dependency : dependencies) {
-      if(!updateResolutionMap.getOrDefault(dependency, false)) {
+    for (Node dependency : dependencies) {
+      if (!updateResolutionMap.getOrDefault(dependency, false)) {
         simulateNode(dependency, node, updateResolutionMap);
         updateResolutionMap.put(dependency, true);
       }
@@ -423,10 +424,11 @@ public class Schematic implements Serializable {
 
     node.update();
   }
+
   public void simulate2() {
     HashMap<Node, Boolean> updateResolutionMap = new HashMap<>();
-    for(Node node : nodes.values()) {
-      if(!updateResolutionMap.getOrDefault(node, false)) {
+    for (Node node : nodes.values()) {
+      if (!updateResolutionMap.getOrDefault(node, false)) {
         simulateNode(node, null, updateResolutionMap);
       }
     }

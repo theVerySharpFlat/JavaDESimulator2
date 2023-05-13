@@ -13,13 +13,12 @@ import imgui.extension.imnodes.ImNodesContext;
 import imgui.extension.imnodes.flag.ImNodesMiniMapLocation;
 import imgui.flag.ImGuiFocusedFlags;
 import imgui.type.ImInt;
-import javadesimulator2.GUI.Components.CustomNode;
-
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import javadesimulator2.GUI.Components.CustomNode;
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
@@ -62,10 +61,11 @@ public class NodeEditor {
   private static Set<Constructor<? extends Node>> loadComponentConstructors() {
     final String packageName = "javadesimulator2.GUI.Components";
 
-    Reflections reflections = new Reflections(
-        new ConfigurationBuilder()
-            .forPackage(packageName)
-            .filterInputsBy(new FilterBuilder().includePackage(packageName)));
+    Reflections reflections =
+        new Reflections(
+            new ConfigurationBuilder()
+                .forPackage(packageName)
+                .filterInputsBy(new FilterBuilder().includePackage(packageName)));
 
     Set<Class<? extends Node>> classes = reflections.getSubTypesOf(Node.class);
 
@@ -87,8 +87,7 @@ public class NodeEditor {
   private boolean simulating = false;
 
   public void showSidebar(boolean shouldShow) {
-    if (!shouldShow)
-      return;
+    if (!shouldShow) return;
 
     ImGui.begin("Digital Electronics");
 
@@ -96,8 +95,7 @@ public class NodeEditor {
 
     for (Constructor<? extends Node> ctor : nodeCtors) {
       if (schematic.getType() != Schematic.Type.COMPONENT
-          && ctor.getDeclaringClass().isAnnotationPresent(ComponentMeta.class))
-        continue;
+          && ctor.getDeclaringClass().isAnnotationPresent(ComponentMeta.class)) continue;
 
       String name = ctor.getDeclaringClass().getSimpleName().toUpperCase();
       ImGui.pushID(name + "-BTN");
@@ -111,12 +109,14 @@ public class NodeEditor {
     }
 
     if (lastSavePath != null && lastSavePath.length() > 0) {
-      File[] componentFiles = new File(new File(lastSavePath).getParent())
-          .listFiles((dir, name) -> name.endsWith("jde2c"));
+      File[] componentFiles =
+          new File(new File(lastSavePath).getParent())
+              .listFiles((dir, name) -> name.endsWith("jde2c"));
 
       for (int i = 0; i < componentFiles.length; i++) {
         // remove abs path
-        componentFiles[i] = new File(componentFiles[i].getPath().replace((new File(lastSavePath).getParent()), ""));
+        componentFiles[i] =
+            new File(componentFiles[i].getPath().replace((new File(lastSavePath).getParent()), ""));
       }
 
       for (File file : componentFiles) {
@@ -269,7 +269,7 @@ public class NodeEditor {
     if (!shouldShow) {
       return;
     }
-    //ImGui.showDemoWindow();
+    // ImGui.showDemoWindow();
     ImGui.begin("Schematic View");
     if (schematic.getType() == Schematic.Type.ROOT) {
 
@@ -340,7 +340,8 @@ public class NodeEditor {
 
         System.out.println("path: " + path);
         CustomNode customNode = addCustomNode(new File(path));
-        ImNodes.setNodeScreenSpacePos(customNode.getID(), ImGui.getMousePosX(), ImGui.getMousePosY());
+        ImNodes.setNodeScreenSpacePos(
+            customNode.getID(), ImGui.getMousePosX(), ImGui.getMousePosY());
       }
 
       ImGui.endDragDropTarget();
@@ -362,7 +363,8 @@ public class NodeEditor {
             outputNode = inputNode == a.getID() ? b.getID() : a.getID();
           }
 
-          if (schematic.getGraph().incidentEdges(inputNode).size() == 0) { // can't have multiple outputs
+          if (schematic.getGraph().incidentEdges(inputNode).size()
+              == 0) { // can't have multiple outputs
             // connected to a
             // single input
             schematic.getGraph().putEdgeValue(inputNode, outputNode, schematic.getNextID());
@@ -417,7 +419,8 @@ public class NodeEditor {
   }
 
   public CustomNode addCustomNode(File path) {
-//    System.out.printf("addCustomNode path=%s, parent=%s\n", path.getPath(), new File(lastSavePath).getParent());
+    //    System.out.printf("addCustomNode path=%s, parent=%s\n", path.getPath(), new
+    // File(lastSavePath).getParent());
     CustomNode node = new CustomNode(schematic, path, new File(new File(lastSavePath).getParent()));
     ImNodes.setNodeScreenSpacePos(node.getID(), 0.0f, 0.0f);
 

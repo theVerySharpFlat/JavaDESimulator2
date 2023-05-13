@@ -59,8 +59,7 @@ public class Meta extends Node {
   @Override
   public boolean canBeUsedInSchematic(Schematic schematic) {
     for (Node node : schematic.getNodes().values()) {
-      if (node.getClass().equals(getClass()))
-        return false;
+      if (node.getClass().equals(getClass())) return false;
     }
     return schematic.getType() == Schematic.Type.COMPONENT;
   }

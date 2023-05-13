@@ -27,8 +27,8 @@ public class Not extends Node {
   private NodeAttribute a() {
     return super.getAttributes().get(0);
   }
+
   private NodeAttribute y() {
     return super.getAttributes().get(1);
   }
-
 }

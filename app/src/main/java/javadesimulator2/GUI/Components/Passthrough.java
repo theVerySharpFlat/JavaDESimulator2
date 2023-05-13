@@ -17,7 +17,6 @@ public class Passthrough extends Node {
 
     int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, getID()));
-
   }
 
   @Override

@@ -4,28 +4,26 @@ import imgui.ImColor;
 import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.extension.imnodes.ImNodes;
-import imgui.extension.imnodes.ImNodesStyle;
 import imgui.flag.ImDrawFlags;
-import imgui.flag.ImGuiCol;
-import imgui.flag.ImGuiStyleVar;
+import java.util.ArrayList;
 import javadesimulator2.GUI.Node;
 import javadesimulator2.GUI.NodeAttribute;
 import javadesimulator2.GUI.Schematic;
 
-import java.util.ArrayList;
-
 public class RGBLED extends Node {
   public RGBLED(Schematic schematic) {
     super(
-      schematic.getCurrentNextID(),
-      "RGBLED-" + schematic.getNextID(),
-      new ArrayList<NodeAttribute>());
+        schematic.getCurrentNextID(),
+        "RGBLED-" + schematic.getNextID(),
+        new ArrayList<NodeAttribute>());
 
-    super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "R", schematic.getNextID(), getID()));
-    super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "G", schematic.getNextID(), getID()));
-    super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "B", schematic.getNextID(), getID()));
+    super.getAttributes()
+        .add(new NodeAttribute(NodeAttribute.IO.I, "R", schematic.getNextID(), getID()));
+    super.getAttributes()
+        .add(new NodeAttribute(NodeAttribute.IO.I, "G", schematic.getNextID(), getID()));
+    super.getAttributes()
+        .add(new NodeAttribute(NodeAttribute.IO.I, "B", schematic.getNextID(), getID()));
   }
-
 
   @Override
   protected void renderNodeBottomContents() {
@@ -51,7 +49,6 @@ public class RGBLED extends Node {
       b = 57;
     }
 
-
     ImVec2 cursorPos = ImGui.getCursorScreenPos();
     ImVec2 nodePadding = new ImVec2();
     float nodeWidth = ImNodes.getNodeDimensionsX(id);
@@ -59,25 +56,25 @@ public class RGBLED extends Node {
     ImNodes.getStyle().getNodePadding(nodePadding);
 
     float bulbWidth = nodeWidth * 0.65f;
-    ImVec2 bulbStartPos = new ImVec2(cursorPos.x + (nodeWidth - bulbWidth) / 2.0f - nodePadding.x, cursorPos.y);
+    ImVec2 bulbStartPos =
+        new ImVec2(cursorPos.x + (nodeWidth - bulbWidth) / 2.0f - nodePadding.x, cursorPos.y);
 
-    ImGui.dummy(
-      bulbWidth,
-      bulbWidth);
+    ImGui.dummy(bulbWidth, bulbWidth);
 
-    ImGui.getWindowDrawList().addRectFilled(
-      bulbStartPos.x,
-      bulbStartPos.y,
-      bulbStartPos.x + bulbWidth,
-      bulbStartPos.y + bulbWidth,
-      ImColor.rgba(r, g, b, 255), 0.0f, ImDrawFlags.None);
+    ImGui.getWindowDrawList()
+        .addRectFilled(
+            bulbStartPos.x,
+            bulbStartPos.y,
+            bulbStartPos.x + bulbWidth,
+            bulbStartPos.y + bulbWidth,
+            ImColor.rgba(r, g, b, 255),
+            0.0f,
+            ImDrawFlags.None);
   }
 
-  public void styleBefore() {
-  }
+  public void styleBefore() {}
 
-  public void styleAfter() {
-  }
+  public void styleAfter() {}
 
   @Override
   protected void renderAttributeContents(NodeAttribute a) {
@@ -87,8 +84,7 @@ public class RGBLED extends Node {
   }
 
   @Override
-  public void update() {
-  }
+  public void update() {}
 
   @Override
   protected void matchDonor(Node donor) {
