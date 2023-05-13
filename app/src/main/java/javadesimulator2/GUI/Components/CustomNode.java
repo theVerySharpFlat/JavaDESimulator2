@@ -14,6 +14,8 @@ import javadesimulator2.GUI.NodeAttribute;
 import javadesimulator2.GUI.Schematic;
 import javadesimulator2.GUI.NodeAttribute.IO;
 
+import javax.print.attribute.Attribute;
+
 public class CustomNode extends Node {
   public CustomNode(Schematic schematic, File path, File root) {
     super(
@@ -22,7 +24,7 @@ public class CustomNode extends Node {
         new ArrayList<NodeAttribute>());
     this.path = path;
 
-    System.out.printf("path=%s, root=%s\n", path.getPath(), root.getPath());
+//    System.out.printf("path=%s, root=%s\n", path.getPath(), root.getPath());
     loadSchematic(schematic, new File(root.getPath(), path.getPath()));
     loadIO(schematic);
   }
@@ -121,10 +123,78 @@ public class CustomNode extends Node {
     for (NodeAttribute key : replaceMap.keySet()) {
       parentToComponentOutputAttributeMap.put(replaceMap.get(key), parentToComponentOutputAttributeMap.remove(key));
     }
+
+    runNewAttributeDamageControl();
   }
 
   public File getPath() {
     return path;
+  }
+
+  private void runNewAttributeDamageControl() {
+    // Attributes that are new and don't appear in the attributes ArrayList
+    for(NodeAttribute attribute : parentToComponentInputAttributeMap.keySet()) {
+      boolean found = false;
+      for(NodeAttribute attribute1 : attributes) {
+        if(attribute.getTitle().equals(attribute1.getTitle())) {
+          found = true;
+          break;
+        }
+      }
+
+      if(!found) {
+        attributes.add(attribute);
+        parent.getNodeAttributes().put(attribute.getID(), attribute);
+        parent.getGraph().addNode(attribute.getID());
+      }
+    }
+
+    for(NodeAttribute attribute : parentToComponentOutputAttributeMap.keySet()) {
+      boolean found = false;
+      for(NodeAttribute attribute1 : attributes) {
+        if(attribute == attribute1) {
+          found = true;
+          break;
+        }
+      }
+
+      if(!found) {
+        attributes.add(attribute);
+        parent.getNodeAttributes().put(attribute.getID(), attribute);
+        parent.getGraph().addNode(attribute.getID());
+      }
+    }
+
+    // Attributes that appear in the save file for user-schematic but don't appear in the defining schematic
+    ArrayList<NodeAttribute> toDelete = new ArrayList<>();
+    for(NodeAttribute attribute : attributes) {
+      boolean found = false;
+      for(NodeAttribute attribute1 : parentToComponentInputAttributeMap.keySet()) {
+        if(attribute1.getTitle().equals(attribute.getTitle())) {
+          found = true;
+          break;
+        }
+      }
+
+      if(!found) {
+        for(NodeAttribute attribute1 : parentToComponentOutputAttributeMap.keySet()) {
+          if(attribute1.getTitle().equals(attribute.getTitle())) {
+            found = true;
+            break;
+          }
+        }
+
+        if(!found) {
+          toDelete.add(attribute);
+        }
+      }
+    }
+
+    for(NodeAttribute a : toDelete) {
+      attributes.remove(a);
+      parent.getGraph().removeNode(a.getID());
+      parent.getNodeAttributes().remove(a.getID());
+    }
   }
 
   HashMap<NodeAttribute, NodeAttribute> parentToComponentInputAttributeMap = new HashMap<>();

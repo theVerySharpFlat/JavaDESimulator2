@@ -383,7 +383,7 @@ public class NodeEditor {
           for (Integer link : linkIds) {
             for (EndpointPair<Integer> edge : schematic.getGraph().edges()) {
               java.util.Optional<Integer> val = schematic.getGraph().edgeValue(edge);
-              if (val.isPresent() && val.get() == link) {
+              if (val.isPresent() && val.get().equals(link)) {
                 schematic.getGraph().removeEdge(edge);
                 break;
               }
@@ -417,7 +417,7 @@ public class NodeEditor {
   }
 
   public CustomNode addCustomNode(File path) {
-    System.out.printf("addCustomNode path=%s, parent=%s\n", path.getPath(), new File(lastSavePath).getParent());
+//    System.out.printf("addCustomNode path=%s, parent=%s\n", path.getPath(), new File(lastSavePath).getParent());
     CustomNode node = new CustomNode(schematic, path, new File(new File(lastSavePath).getParent()));
     ImNodes.setNodeScreenSpacePos(node.getID(), 0.0f, 0.0f);
 

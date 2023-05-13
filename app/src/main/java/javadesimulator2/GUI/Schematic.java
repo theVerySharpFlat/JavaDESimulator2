@@ -248,6 +248,10 @@ public class Schematic implements Serializable {
       System.out.println("Failed to get nodes node!");
     }
 
+    for(NodeAttribute nodeAttribute : nodeAttributes.values()) {
+      graph.addNode(nodeAttribute.getID());
+    }
+
     JsonNode linksNode = root.get("links");
     if (linksNode != null) {
       Iterator<JsonNode> it = linksNode.elements();
@@ -330,8 +334,8 @@ public class Schematic implements Serializable {
        * ImNodes.getNodeGridSpacePosY(oldID));
        */
 
-      for (Integer oldAttributeID : nodeAttributes.keySet()) {
-        NodeAttribute attribute = nodeAttributes.get(oldAttributeID);
+      for (NodeAttribute attribute : node.attributes) {
+        int oldAttributeID = attribute.getID();
 
         int newAttributeID = oldIDToNewIDMap.getOrDefault(oldAttributeID, -1) + baseID;
 
@@ -386,6 +390,48 @@ public class Schematic implements Serializable {
     nextID = id;
   }
 
+  private void simulateNode(Node node, Node dependent, HashMap<Node, Boolean> updateResolutionMap) {
+    // Acquire values for attribute states
+    HashSet<Node> dependencies = new HashSet<>();
+    for(NodeAttribute attribute : node.getAttributes()) {
+      if(attribute.getIOType() != NodeAttribute.IO.I) {
+        continue;
+      }
+
+      for(EndpointPair<Integer> con : graph.incidentEdges(attribute.getID())) {
+        if(con.nodeV() != attribute.getID()) {
+          break;
+        }
+
+        NodeAttribute dependencyAttribute = nodeAttributes.getOrDefault(con.nodeU(), null);
+
+        if(dependencyAttribute != null) {
+          Node dependencyParent = nodes.getOrDefault(dependencyAttribute.getParentID(), null);
+          if(dependencyParent != null && dependent != dependencyParent) {
+            dependencies.add(dependencyParent);
+          }
+        }
+      }
+    }
+
+    for(Node dependency : dependencies) {
+      if(!updateResolutionMap.getOrDefault(dependency, false)) {
+        simulateNode(dependency, node, updateResolutionMap);
+        updateResolutionMap.put(dependency, true);
+      }
+    }
+
+    node.update();
+  }
+  public void simulate2() {
+    HashMap<Node, Boolean> updateResolutionMap = new HashMap<>();
+    for(Node node : nodes.values()) {
+      if(!updateResolutionMap.getOrDefault(node, false)) {
+        simulateNode(node, null, updateResolutionMap);
+      }
+    }
+  }
+
   public void simulate() {
     for (int i = 0; i < 1; i++) {
       for (EndpointPair<Integer> edge : getGraph().edges()) {
@@ -397,16 +443,14 @@ public class Schematic implements Serializable {
 
         Node srcNode = nodes.get(srcAttribute.getParentID());
         Node dstNode = nodes.get(dstAttribute.getParentID());
-
         srcNode.update();
         dstNode.update();
 
         srcAttribute.setState(dstAttribute.getState());
-
-        for (Node node : getNodes().values()) {
-          node.update();
-        }
       }
+      /*for (Node node : getNodes().values()) {
+        node.update();
+      }*/
 
     }
   }
