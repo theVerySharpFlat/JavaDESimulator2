@@ -6,7 +6,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
@@ -19,55 +18,98 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import javadesimulator2.GUI.Components.CustomNode;
 
+/** A software representation of a digital schematic */
 public class Schematic implements Serializable {
   private HashMap<Integer, Node> nodes = new HashMap<>();
   private HashMap<Integer, NodeAttribute> nodeAttributes = new HashMap<>();
 
   private int nextID = 0;
 
-  @JsonSerialize(using = NodeGraphSerializer.class)
   private MutableValueGraph<Integer, Integer> graph =
       ValueGraphBuilder.directed().allowsSelfLoops(false).build();
 
+  /** The type of schematic */
   public enum Type {
     ROOT,
+
+    /** Components allow for modularity and reusability through custom components */
     COMPONENT
   }
 
   private Type type;
 
+  /**
+   * Create a schematic
+   *
+   * @param type The type of schematic to create
+   */
   public Schematic(Type type) {
     this.type = type;
   }
 
+  /**
+   * Get the schematic type
+   *
+   * @return The type of schematic
+   */
   public Type getType() {
     return type;
   }
 
+  /**
+   * Get the nodes in the schematic
+   *
+   * @return A hashmap filled with all the nodes in the schematic. They Keys are the IDs of the
+   *     Nodes and the values are the actual nodes
+   */
   public HashMap<Integer, Node> getNodes() {
     return nodes;
   }
 
+  /**
+   * @return A hashmap filled with all the nodes attributes in the schematic. The keys are the IDs
+   *     of the NodeAttributes and the values are the NodeAttributes themselves
+   */
   public HashMap<Integer, NodeAttribute> getNodeAttributes() {
     return nodeAttributes;
   }
 
+  /**
+   * @return A graph filled with the connections between nodes in the schematic. Integer IDs are
+   *     used instead of the actual Node objects
+   */
   public MutableValueGraph<Integer, Integer> getGraph() {
     return graph;
   }
 
+  /**
+   * Retrieve the next ID for creation of Nodes, NodeAttributes, and edges and then increment the
+   * nextID.
+   *
+   * @return The next object ID
+   */
   public int getNextID() {
     return nextID++;
   }
 
+  /**
+   * Retrieve the current next ID, but do not increment for the next call
+   *
+   * @return The current next object ID
+   */
   public int getCurrentNextID() {
     return nextID;
   }
 
+  /**
+   * Serialize the schematic into the given generator
+   *
+   * @param generator The generator used to serialize the schematic
+   * @throws IOException
+   */
   public void serialize(JsonGenerator generator) throws IOException {
     ObjectMapper mapper = new ObjectMapper();
 
@@ -108,7 +150,7 @@ public class Schematic implements Serializable {
     generator.writeStartArray();
     for (EndpointPair<Integer> edge : graph.edges()) {
       generator.writeStartObject();
-      if(graph.edgeValue(edge).isPresent()) {
+      if (graph.edgeValue(edge).isPresent()) {
         generator.writeNumberField("ID", graph.edgeValue(edge).get());
       }
 
@@ -119,6 +161,12 @@ public class Schematic implements Serializable {
     generator.writeEndArray();
   }
 
+  /**
+   * Load the schematic from a JsonNode
+   *
+   * @param root JsonNode that points to a serialized schematic
+   * @param parent The root directory of the schematic file used to load other components
+   */
   public void load(JsonNode root, File parent) {
     HashMap<Integer, ArrayList<NodeAttribute>> nodeToAttributesMap = new HashMap<>();
 
@@ -186,6 +234,10 @@ public class Schematic implements Serializable {
           System.out.println("Failed to load name or type on node!");
           return;
         }
+
+        // Find a constructor for the serialized node. Since the type is serialized, we can choose a
+        // constructor
+        // Based on the name of the class and the type field
         Constructor<? extends Node> foundCtor = null;
         for (Constructor<? extends Node> ctor : NodeEditor.nodeCtors) {
           if (ctor.getDeclaringClass().getSimpleName().equals(type)) {
@@ -203,26 +255,26 @@ public class Schematic implements Serializable {
           // return;
         }
 
+        // Deserialize custom data
         HashMap<String, String> customDataMap = null;
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         JsonNode customDataNode = node.path("customData");
         if (!customDataNode.isMissingNode()) {
           try {
-            customDataMap =
-                mapper.readValue(
-                    customDataNode.asText(), new TypeReference<>() {
-                  });
+            customDataMap = mapper.readValue(customDataNode.asText(), new TypeReference<>() {});
           } catch (JsonProcessingException e) {
             e.printStackTrace();
           }
         }
 
+        // We fill out a generic node with all the attributes, id, and name
+        // to be consumed by the new node
         Node donor = new Node(id, name, nodeToAttributesMap.getOrDefault(id, new ArrayList<>()));
 
         if (!type.equals("CustomNode")) {
           try {
             Node newNode = foundCtor.newInstance(this);
-            newNode.matchDonor(donor);
+            newNode.matchDonor(donor); // Essentially my java version of the C++ move constructor
             if (customDataMap != null) {
               newNode.loadCustomData(customDataMap);
             }
@@ -240,6 +292,8 @@ public class Schematic implements Serializable {
             continue;
           }
 
+          // Custom nodes require a special constructor with the relative path to the component file
+          // and the project root
           CustomNode newNode = new CustomNode(this, new File(path), parent);
           newNode.matchDonor(donor);
           nodes.put(newNode.getID(), newNode);
@@ -249,10 +303,12 @@ public class Schematic implements Serializable {
       System.out.println("Failed to get nodes node!");
     }
 
+    // Add all attributes to the graph
     for (NodeAttribute nodeAttribute : nodeAttributes.values()) {
       graph.addNode(nodeAttribute.getID());
     }
 
+    // Load all links
     JsonNode linksNode = root.get("links");
     if (linksNode != null) {
       Iterator<JsonNode> it = linksNode.elements();
@@ -276,14 +332,23 @@ public class Schematic implements Serializable {
     }
   }
 
+  /** Optimize IDs in the schematic such that no ID is skipped */
   public void optimizeIDs() {
     optimizeIDs(0, false);
   }
 
+  /**
+   * Optimize IDs in the schematic such that no ID is skipped
+   *
+   * @param baseID The starting ID, eg. 0, in the schematic
+   * @param virtualSchematic This should be marked true if the schematic's nodes aren't being drawn
+   *     on editor which indicates to the method that it should not call
+   *     ImNodes.getNodeGridPosition()
+   */
   public void optimizeIDs(int baseID, boolean virtualSchematic) {
-    System.out.println("right here");
     ArrayList<Integer> ids = new ArrayList<>();
 
+    // Load all of the nodes and their attributes into the ArrayList
     for (Node node : nodes.values()) {
       ids.add(node.getID());
 
@@ -292,16 +357,16 @@ public class Schematic implements Serializable {
       }
     }
 
+    // Load the edges into the ArrayList
     for (EndpointPair<Integer> edge : graph.edges()) {
-      if(graph.edgeValue(edge).isPresent()) {
+      if (graph.edgeValue(edge).isPresent()) {
         ids.add(graph.edgeValue(edge).get());
       }
     }
 
-    // ids.sort(Comparator.naturalOrder());
-    //
-    System.out.println("riiight here");
-
+    // Map old IDs to the optimized ones. The new IDs are the indices in the ArrayList and the old
+    // ones are the actual
+    // values stored
     HashMap<Integer, Integer> oldIDToNewIDMap = new HashMap<>();
     for (int i = 0; i < ids.size(); i++) {
       oldIDToNewIDMap.put(ids.get(i), i + baseID);
@@ -332,12 +397,6 @@ public class Schematic implements Serializable {
 
       node.setID(newID);
       node.updateName();
-
-      /*
-       * ImNodes.setNodeGridSpacePos(node.getID(),
-       * ImNodes.getNodeGridSpacePosX(oldID),
-       * ImNodes.getNodeGridSpacePosY(oldID));
-       */
 
       for (NodeAttribute attribute : node.attributes) {
         int oldAttributeID = attribute.getID();
@@ -372,9 +431,9 @@ public class Schematic implements Serializable {
         continue;
       }
 
-      if(graph.edgeValue(oldEdge).isPresent()) {
+      if (graph.edgeValue(oldEdge).isPresent()) {
         newGraph.putEdgeValue(
-          newU, newV, oldIDToNewIDMap.getOrDefault(graph.edgeValue(oldEdge).get(), -1));
+            newU, newV, oldIDToNewIDMap.getOrDefault(graph.edgeValue(oldEdge).get(), -1));
       }
     }
 
@@ -399,65 +458,24 @@ public class Schematic implements Serializable {
     nextID = id;
   }
 
-  private void simulateNode(Node node, Node dependent, HashMap<Node, Boolean> updateResolutionMap) {
-    // Acquire values for attribute states
-    HashSet<Node> dependencies = new HashSet<>();
-    for (NodeAttribute attribute : node.getAttributes()) {
-      if (attribute.getIOType() != NodeAttribute.IO.I) {
-        continue;
-      }
-
-      for (EndpointPair<Integer> con : graph.incidentEdges(attribute.getID())) {
-        if (con.nodeV() != attribute.getID()) {
-          break;
-        }
-
-        NodeAttribute dependencyAttribute = nodeAttributes.getOrDefault(con.nodeU(), null);
-
-        if (dependencyAttribute != null) {
-          Node dependencyParent = nodes.getOrDefault(dependencyAttribute.getParentID(), null);
-          if (dependencyParent != null && dependent != dependencyParent) {
-            dependencies.add(dependencyParent);
-          }
-        }
-      }
-    }
-
-    for (Node dependency : dependencies) {
-      if (!updateResolutionMap.getOrDefault(dependency, false)) {
-        simulateNode(dependency, node, updateResolutionMap);
-        updateResolutionMap.put(dependency, true);
-      }
-    }
-
-    node.update();
-  }
-
-  public void simulate2() {
-    HashMap<Node, Boolean> updateResolutionMap = new HashMap<>();
-    for (Node node : nodes.values()) {
-      if (!updateResolutionMap.getOrDefault(node, false)) {
-        simulateNode(node, null, updateResolutionMap);
-      }
-    }
-  }
-
+  /** Simulate the schematic's logic */
   public void simulate() {
-    for (int i = 0; i < 1; i++) {
-      for (EndpointPair<Integer> edge : getGraph().edges()) {
-        int src = edge.nodeU();
-        int dst = edge.nodeV();
+    // Loop through all the connections
+    for (EndpointPair<Integer> edge : getGraph().edges()) {
+      int dst = edge.nodeU();
+      int src = edge.nodeV();
 
-        NodeAttribute srcAttribute = getNodeAttributes().get(src);
-        NodeAttribute dstAttribute = getNodeAttributes().get(dst);
+      NodeAttribute dstAttribute = getNodeAttributes().get(dst);
+      NodeAttribute srcAttribute = getNodeAttributes().get(src);
 
-        Node srcNode = nodes.get(srcAttribute.getParentID());
-        Node dstNode = nodes.get(dstAttribute.getParentID());
-        srcNode.update();
-        dstNode.update();
+      // Update the state of the input attribute
+      dstAttribute.setState(srcAttribute.getState());
 
-        srcAttribute.setState(dstAttribute.getState());
-      }
+      // Update the nodes
+      Node srcNode = nodes.get(dstAttribute.getParentID());
+      Node dstNode = nodes.get(srcAttribute.getParentID());
+      srcNode.update();
+      dstNode.update();
     }
   }
 }

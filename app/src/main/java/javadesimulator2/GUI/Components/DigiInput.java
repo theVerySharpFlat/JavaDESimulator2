@@ -13,10 +13,7 @@ import javadesimulator2.GUI.Schematic;
 public class DigiInput extends Node {
 
   public DigiInput(Schematic schematic) {
-    super(
-        schematic.getCurrentNextID(),
-        "DIGIIN-" + schematic.getNextID(),
-        new ArrayList<>());
+    super(schematic.getCurrentNextID(), "DIGIIN-" + schematic.getNextID(), new ArrayList<>());
 
     int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.O, "Y", idY, getID()));

@@ -7,7 +7,15 @@ import imgui.extension.imnodes.flag.ImNodesPinShape;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/** A node is the software equivalent of a IC chip */
 public class Node {
+  /**
+   * @param id ID of Node
+   * @param name Name of Node
+   * @param attributes Attributes for the Node. You can add attributes later as well using
+   *     getAttributes() Attributes for the Node. You can add attributes later as well using
+   *     getAttributes().add
+   */
   public Node(int id, String name, ArrayList<NodeAttribute> attributes) {
     this.attributes = attributes;
     this.id = id;
@@ -34,6 +42,11 @@ public class Node {
     return name;
   }
 
+  /**
+   * Render a node attribute
+   *
+   * @param a Node attribute to render
+   */
   protected void renderAttributeContents(NodeAttribute a) { // can be overridden for styling
     if (a.getIOType() == NodeAttribute.IO.O) {
       ImGui.setCursorPosX(
@@ -47,8 +60,10 @@ public class Node {
     ImGui.text(a.getTitle() + "_" + a.getID());
   }
 
+  /** Render the bottom contents of a node. This should be overridden */
   protected void renderNodeBottomContents() {}
 
+  /** Render the node */
   public void show() {
     ImNodes.beginNode(getID());
     ImNodes.pushColorStyle(
@@ -98,13 +113,18 @@ public class Node {
     ImNodes.endNode();
   }
 
+  /**
+   * Take in a generic Node and steal (rip, salvage, devour) its attributes to match
+   *
+   * @param donor The donor Node
+   */
   protected void matchDonor(Node donor) {
     this.id = donor.id;
     this.name = donor.name;
     this.attributes = donor.attributes;
   }
 
-  // Not neccesarry, but you should override me!
+  /** Update the node's logic state. Should be overridden */
   public void update() {}
 
   public boolean canBeUsedInSchematic(Schematic schematic) {

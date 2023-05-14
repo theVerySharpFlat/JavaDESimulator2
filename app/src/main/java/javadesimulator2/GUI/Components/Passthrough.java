@@ -7,10 +7,7 @@ import javadesimulator2.GUI.Schematic;
 
 public class Passthrough extends Node {
   public Passthrough(Schematic schematic) {
-    super(
-        schematic.getCurrentNextID(),
-        "PASSTHROUGH-" + schematic.getNextID(),
-        new ArrayList<>());
+    super(schematic.getCurrentNextID(), "PASSTHROUGH-" + schematic.getNextID(), new ArrayList<>());
 
     int idA = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "A", idA, getID()));

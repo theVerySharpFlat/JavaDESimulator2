@@ -1,11 +1,19 @@
 package javadesimulator2.GUI;
 
+/** A NodeAttribute the equivalent of a pin on a IC chip */
 public class NodeAttribute {
+  /** NodeAttributes can either be Input or Ouptu */
   public enum IO {
     I,
     O
   }
 
+  /**
+   * @param ioType Input or Output
+   * @param title Name of attribute
+   * @param id ID of attribute
+   * @param parentID ID of parent node
+   */
   public NodeAttribute(IO ioType, String title, int id, int parentID) {
     this.ioType = ioType;
     this.title = title;

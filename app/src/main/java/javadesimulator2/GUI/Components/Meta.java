@@ -13,10 +13,7 @@ import javadesimulator2.GUI.Schematic;
 public class Meta extends Node {
 
   public Meta(Schematic schematic) {
-    super(
-        schematic.getCurrentNextID(),
-        "META-" + schematic.getNextID(),
-        new ArrayList<>());
+    super(schematic.getCurrentNextID(), "META-" + schematic.getNextID(), new ArrayList<>());
   }
 
   final ImString name = new ImString(10);

@@ -7,10 +7,7 @@ import javadesimulator2.GUI.Schematic;
 
 public class Or extends Node {
   public Or(Schematic schematic) {
-    super(
-        schematic.getCurrentNextID(),
-        "OR-" + schematic.getNextID(),
-        new ArrayList<>());
+    super(schematic.getCurrentNextID(), "OR-" + schematic.getNextID(), new ArrayList<>());
 
     int idA = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "A", idA, getID()));

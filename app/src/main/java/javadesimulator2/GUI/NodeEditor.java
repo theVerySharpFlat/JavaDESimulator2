@@ -24,6 +24,7 @@ import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
+/** The node editor */
 public class NodeEditor {
   final ImNodesContext context = new ImNodesContext();
 
@@ -35,6 +36,9 @@ public class NodeEditor {
 
   ImVec2 lastHeldMousePosition;
 
+  /**
+   * The ImNodes library doesn't support panning, so I implemented my own. Shift + click/drag to pan
+   */
   private void handlePanning() {
     if (ImNodes.isEditorHovered()) {
       if (ImGui.isMouseClicked(0)) {
@@ -57,8 +61,11 @@ public class NodeEditor {
   public static final int KEY_BACKSPACE = 259;
   public static final int KEY_DELETE = 261;
 
-  public String currentDraggedElement = "";
-
+  /**
+   * Utility function to load all the Components from the JAR
+   *
+   * @return All Components under javadesimulator2.GUI.Components that extend Node
+   */
   private static Set<Constructor<? extends Node>> loadComponentConstructors() {
     final String packageName = "javadesimulator2.GUI.Components";
 
@@ -87,6 +94,11 @@ public class NodeEditor {
 
   private boolean simulating = false;
 
+  /**
+   * Show the sidebar on the Application
+   *
+   * @param shouldShow
+   */
   public void showSidebar(boolean shouldShow) {
     if (!shouldShow) return;
 
@@ -94,6 +106,7 @@ public class NodeEditor {
 
     float width = ImGui.getWindowWidth();
 
+    // Create a draggable button for each component
     for (Constructor<? extends Node> ctor : nodeCtors) {
       if (schematic.getType() != Schematic.Type.COMPONENT
           && ctor.getDeclaringClass().isAnnotationPresent(ComponentMeta.class)) continue;
@@ -109,16 +122,18 @@ public class NodeEditor {
       ImGui.popID();
     }
 
+    // We need a draggable button for each custom component as well
     if (lastSavePath != null && lastSavePath.length() > 0) {
       File[] componentFiles =
           new File(new File(lastSavePath).getParent())
               .listFiles((dir, name) -> name.endsWith("jde2c"));
 
-      if(componentFiles != null) {
+      if (componentFiles != null) {
         for (int i = 0; i < componentFiles.length; i++) {
           // remove abs path
           componentFiles[i] =
-            new File(componentFiles[i].getPath().replace((new File(lastSavePath).getParent()), ""));
+              new File(
+                  componentFiles[i].getPath().replace((new File(lastSavePath).getParent()), ""));
         }
 
         for (File file : componentFiles) {
@@ -138,27 +153,26 @@ public class NodeEditor {
     ImGui.end();
   }
 
+  /** Simulate the current schematic */
   private void simulate() {
-    for (EndpointPair<Integer> edge : schematic.getGraph().edges()) {
-      int src = edge.nodeU();
-      int dst = edge.nodeV();
-
-      NodeAttribute srcAttribute = schematic.getNodeAttributes().get(src);
-      NodeAttribute dstAttribute = schematic.getNodeAttributes().get(dst);
-
-      srcAttribute.setState(dstAttribute.getState());
-    }
-
-    for (Node node : schematic.getNodes().values()) {
-      node.update();
-    }
+    schematic.simulate();
   }
 
+  /**
+   * Create a new schematic
+   *
+   * @param type The type of schematic to create
+   */
   public void newSchematic(Schematic.Type type) {
     schematic = new Schematic(type);
     ImNodes.editorResetPanning(0, 0);
   }
 
+  /**
+   * Load a schematic from a file
+   *
+   * @param path The path to th efile
+   */
   public void load(String path) {
     newSchematic(Schematic.Type.ROOT); // Type overwritten by load
 
@@ -205,6 +219,11 @@ public class NodeEditor {
     }
   }
 
+  /**
+   * Serialize the current schematic
+   *
+   * @param path The path to save to
+   */
   public void serialize(String path) {
     System.out.println("here");
 
@@ -243,6 +262,11 @@ public class NodeEditor {
     lastSavePath = path;
   }
 
+  /**
+   * Show the editor
+   *
+   * @param shouldShow
+   */
   public void show(boolean shouldShow) {
     ImGui.begin("Nodes");
     ImGui.text("Next ID " + schematic.getCurrentNextID());
@@ -273,32 +297,38 @@ public class NodeEditor {
     if (!shouldShow) {
       return;
     }
-    // ImGui.showDemoWindow();
-    ImGui.begin("Schematic View");
-    if (schematic.getType() == Schematic.Type.ROOT) {
 
+    // Show the schematic
+    ImGui.begin("Schematic View");
+
+    // Show the play button
+    if (schematic.getType() == Schematic.Type.ROOT) {
       ImGui.setCursorPosX(ImGui.getWindowSizeX() / 2.0f - ImGui.calcTextSize("PLAY").x);
       if (ImGui.button(simulating ? "STOP" : "PLAY")) {
         simulating = !simulating;
       }
     }
+
     ImNodes.editorContextSet(context);
     ImNodes.beginNodeEditor();
 
     ImNodes.miniMap(0.2f, ImNodesMiniMapLocation.TopRight);
     handlePanning();
 
+    // Draw links
     for (EndpointPair<Integer> edge : schematic.getGraph().edges()) {
       java.util.Optional<Integer> edgeValue = schematic.getGraph().edgeValue(edge);
       edgeValue.ifPresent(integer -> ImNodes.link(integer, edge.nodeU(), edge.nodeV()));
     }
 
+    // Draw nodes
     for (Node node : schematic.getNodes().values()) {
       node.show();
     }
 
     ImNodes.endNodeEditor();
 
+    // Handle dragging and dropping onto the schematic
     if (ImGui.beginDragDropTarget()) {
       Object raw = ImGui.acceptDragDropPayload("NEW-COMPONENT");
       if (raw != null) {
@@ -332,6 +362,7 @@ public class NodeEditor {
         }
       }
 
+      // Handle custom components
       raw = ImGui.acceptDragDropPayload("NEW-CUSTOM-COMPONENT");
       if (raw != null && lastSavePath != null) {
         String path = (String) raw;
@@ -340,7 +371,6 @@ public class NodeEditor {
           path = path.substring(1);
         }
 
-        System.out.println("path: " + path);
         CustomNode customNode = addCustomNode(new File(path));
         ImNodes.setNodeScreenSpacePos(
             customNode.getID(), ImGui.getMousePosX(), ImGui.getMousePosY());
@@ -365,10 +395,8 @@ public class NodeEditor {
             outputNode = inputNode == a.getID() ? b.getID() : a.getID();
           }
 
-          if (schematic.getGraph().incidentEdges(inputNode).size()
-              == 0) { // can't have multiple outputs
-            // connected to a
-            // single input
+          if (schematic.getGraph().incidentEdges(inputNode).size() == 0) {
+            // can't have multiple output connected to a single input
             schematic.getGraph().putEdgeValue(inputNode, outputNode, schematic.getNextID());
           }
         } else {
@@ -378,6 +406,7 @@ public class NodeEditor {
     }
 
     {
+      // Delete nodes, edges
       if (ImGui.isWindowFocused(ImGuiFocusedFlags.RootAndChildWindows)
           && (ImGui.getIO().getKeysDown(KEY_DELETE) || ImGui.getIO().getKeysDown(KEY_BACKSPACE))) {
         if (ImNodes.numSelectedLinks() > 0) {
@@ -420,6 +449,10 @@ public class NodeEditor {
     ImGui.end();
   }
 
+  /**
+   * @param path Path to the custom node
+   * @return A loaded CustomNode
+   */
   public CustomNode addCustomNode(File path) {
     CustomNode node = new CustomNode(schematic, path, new File(new File(lastSavePath).getParent()));
     ImNodes.setNodeScreenSpacePos(node.getID(), 0.0f, 0.0f);

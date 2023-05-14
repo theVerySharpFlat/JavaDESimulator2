@@ -7,10 +7,7 @@ import javadesimulator2.GUI.Schematic;
 
 public class Not extends Node {
   public Not(Schematic schematic) {
-    super(
-        schematic.getCurrentNextID(),
-        "NOT-" + schematic.getNextID(),
-        new ArrayList<>());
+    super(schematic.getCurrentNextID(), "NOT-" + schematic.getNextID(), new ArrayList<>());
 
     int idA = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "A", idA, getID()));

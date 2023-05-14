@@ -12,10 +12,7 @@ import javadesimulator2.GUI.Schematic;
 
 public class RGBLED extends Node {
   public RGBLED(Schematic schematic) {
-    super(
-        schematic.getCurrentNextID(),
-        "RGBLED-" + schematic.getNextID(),
-        new ArrayList<>());
+    super(schematic.getCurrentNextID(), "RGBLED-" + schematic.getNextID(), new ArrayList<>());
 
     super.getAttributes()
         .add(new NodeAttribute(NodeAttribute.IO.I, "R", schematic.getNextID(), getID()));

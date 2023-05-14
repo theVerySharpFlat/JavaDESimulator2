@@ -8,10 +8,7 @@ import javadesimulator2.GUI.Schematic;
 
 public class LED extends Node {
   public LED(Schematic schematic) {
-    super(
-        schematic.getCurrentNextID(),
-        "LED-" + schematic.getNextID(),
-        new ArrayList<>());
+    super(schematic.getCurrentNextID(), "LED-" + schematic.getNextID(), new ArrayList<>());
 
     int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "I", idY, getID()));

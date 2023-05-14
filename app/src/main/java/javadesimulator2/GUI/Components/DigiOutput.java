@@ -13,10 +13,7 @@ import javadesimulator2.GUI.Schematic;
 public class DigiOutput extends Node {
 
   public DigiOutput(Schematic schematic) {
-    super(
-        schematic.getCurrentNextID(),
-        "DIGIOUT-" + schematic.getNextID(),
-        new ArrayList<>());
+    super(schematic.getCurrentNextID(), "DIGIOUT-" + schematic.getNextID(), new ArrayList<>());
 
     int idY = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "Y", idY, getID()));

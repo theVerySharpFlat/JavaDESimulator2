@@ -7,10 +7,7 @@ import javadesimulator2.GUI.Schematic;
 
 public class And extends Node {
   public And(Schematic schematic) {
-    super(
-        schematic.getCurrentNextID(),
-        "AND-" + schematic.getNextID(),
-      new ArrayList<>());
+    super(schematic.getCurrentNextID(), "AND-" + schematic.getNextID(), new ArrayList<>());
 
     int idA = schematic.getNextID();
     super.getAttributes().add(new NodeAttribute(NodeAttribute.IO.I, "A", idA, getID()));
